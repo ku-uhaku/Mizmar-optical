@@ -42,6 +42,11 @@ export class CheckoutDto {
   @ApiPropertyOptional({ description: 'Convert this quote (it is re-priced at current prices)' }) @IsOptional() @IsString() quoteId?: string;
 }
 
+export class PriceCartDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() customerId?: string;
+  @ApiProperty({ type: [SaleLineDto] }) @IsArray() @ArrayMaxSize(100) @ValidateNested({ each: true }) @Type(() => SaleLineDto) lines!: SaleLineDto[];
+}
+
 export class AddPaymentDto {
   @ApiProperty() @IsString() methodId!: string;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0.01) @Max(99_999_999) amount!: number;

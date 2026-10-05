@@ -8,6 +8,7 @@ import type { SaleLineDto } from './sales.dto';
 export interface PricedCartLine {
   variantId: string;
   productId: string;
+  productType: string;
   sku: string;
   description: string;
   quantity: number;
@@ -72,7 +73,7 @@ export class CartPricingService {
       inputs.push({ quantity: l.quantity, unitPrice: Number(v.price), lensPrice: lens?.lensPrice, treatmentsPrice: lens?.treatmentsPrice, discount: l.discount ?? null, taxRatePct, taxInclusive });
       const lensText = lens ? ` + ${lens.lensEntryName ?? lens.lensTypeName}${lens.treatments.length ? ` (${lens.treatments.map((t) => t.name).join(', ')})` : ''}` : '';
       out.push({
-        variantId: v.id, productId: v.product.id, sku: v.sku, description: `${v.product.name}${v.color ? ` — ${v.color}` : ''}${v.size ? ` ${v.size}` : ''}${lensText}`,
+        variantId: v.id, productId: v.product.id, productType: v.product.type, sku: v.sku, description: `${v.product.name}${v.color ? ` — ${v.color}` : ''}${v.size ? ` ${v.size}` : ''}${lensText}`,
         quantity: l.quantity, unitPrice: Number(v.price), unitCost: v.cost == null ? null : Number(v.cost), discount: 0, taxRateId: tax?.id ?? null, taxRatePct, taxInclusive,
         taxAmount: 0, lineTotal: 0, gross: 0, requiresStock: true, lens,
       });

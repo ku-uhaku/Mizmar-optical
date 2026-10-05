@@ -72,6 +72,27 @@ describe('POS: register sessions, checkout, payments (e2e)', () => {
     beforeAll(async () => { session = (await f.openCashier(500)).session.id; });
     afterAll(async () => { await f.closeSession(f.cashier, session, 99999).catch(() => undefined); });
 
+    it('previews the exact total without side effects, and surfaces lens problems early', async () => {
+      const item = await f.newProduct({ price: 120, stock: 5 });
+      const before = await f.prisma.raw.order.count();
+      const p = (await f.cashier.post('/pos/price', { lines: [line(item.variantId, 3)] }).expect(200)).body;
+      expect(p).toMatchObject({ subtotal: 360, discountTotal: 0, taxTotal: 60, total: 360, hasLens: false, minimumPayment: 360, depositPercent: null });
+      expect(p.lines[0]).toMatchObject({ quantity: 3, lineTotal: 360, taxAmount: 60 });
+      expect(await f.prisma.raw.order.count()).toBe(before);
+      expect(await f.stockOf(item.variantId)).toBe(5);
+      expect((await f.cashier.post('/pos/price', { lines: [] }).expect(200)).body.total).toBe(0);
+      const fr = await f.newProduct({ type: 'FRAME', lens: true, price: 1000 });
+      const lens = await f.lensOptions();
+      const sv = lens.find((l) => l.code === 'single_vision')!;
+      const err = await f.cashier.post('/pos/price', { lines: [line(fr.variantId, 1, { lens: { lensTypeId: sv.id } })] }).expect(400);
+      expect(err.body.code).toBe('CUSTOMER_REQUIRED');
+      const { customer, rx } = await f.customerWithRx();
+      const lp = (await f.cashier.post('/pos/price', { customerId: customer.id, lines: [line(fr.variantId, 1, { lens: { lensTypeId: sv.id, prescriptionId: rx.id } })] }).expect(200)).body;
+      expect(lp).toMatchObject({ hasLens: true, depositPercent: 30, minimumPayment: Math.ceil(lp.total * 0.3) });
+      await f.cashier.post('/pos/price', { lines: [line(item.variantId, 1, { discount: { type: 'PERCENT', value: 10 } })] }).expect(403); // same permission rules as checkout
+      await f.technician.post('/pos/price', { lines: [] }).expect(403);
+    });
+
     it('sells, takes stock, issues a numbered invoice, records payment and the drawer movement (prices are tax-inclusive)', async () => {
       const item = await f.newProduct({ price: 120, cost: 50, stock: 10 });
       const o = (await f.cashier.post('/pos/checkout', { lines: [line(item.variantId, 2)], payments: [{ methodId: f.method('cash'), amount: 240 }] }).expect(201)).body;

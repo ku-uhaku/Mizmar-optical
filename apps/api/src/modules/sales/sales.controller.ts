@@ -20,6 +20,9 @@ export class SalesController {
   ) {}
 
   // ---- checkout & orders
+  @Post('pos/price') @HttpCode(200) @Permissions('pos:access')
+  price(@Body() dto: D.PriceCartDto, @CurrentUser() u: AuthUser, @CurrentStore() s: string | null) { return this.orders.preview(dto.lines, dto.customerId, u, s); }
+
   @Post('pos/checkout') @Permissions('pos:access', 'orders:create', 'payments:create')
   checkout(@Body() dto: D.CheckoutDto, @CurrentUser() u: AuthUser, @CurrentStore() s: string | null) { return this.orders.checkout(dto, u, s); }
 

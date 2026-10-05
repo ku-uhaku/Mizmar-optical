@@ -3,9 +3,9 @@
 Optical-store platform: a public **storefront** and an **admin ERP** (POS, inventory, purchasing, lens workshop,
 appointments, HR, finance, reports), fully configurable from the dashboard.
 
-> **Status: Phases 1–2 of 7 complete** — foundations, plus catalog, products, inventory, customers and prescriptions
-> (API + admin screens). POS, purchasing, workshop, storefront commerce, HR, finance and reports arrive in phases 3–7
-> (see [Roadmap](#roadmap)).
+> **Status: Phases 1–3 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; and the
+> **point of sale** (register sessions, checkout, prescription orders with deposits, returns, quotes, invoices).
+> Purchasing, workshop, storefront commerce, HR, finance and reports arrive in phases 4–7 (see [Roadmap](#roadmap)).
 
 | Part | Stack | Port |
 |---|---|---|
@@ -115,6 +115,36 @@ Design rules worth knowing before adding modules:
 - **Store scoping:** stock and documents are limited to the stores a user belongs to; super admins see everything.
 - **Money and dioptres** are `Decimal` in the database and plain JSON numbers in API responses.
 
+## What phase 3 added (POS, sales, invoices)
+
+| Area | API | Admin screen |
+|---|---|---|
+| Register sessions | `pos/sessions` — open with a float, cash in/out, live **X** report, close with counted cash → variance + frozen **Z** report; `pos/reports/daily` | **Caisse** (session bar) · **Caisses & clôtures** |
+| Checkout | `POST /pos/price` (exact preview), `POST /pos/checkout` — split tenders, discounts (`pos:discount`), prescription lenses, deposits | **Caisse** (search/scan, cart, lens configurator, payment dialog, parked sales) |
+| Orders | `orders` — list/filter, detail, `payments` on a balance, `deliver`, `cancel`, `returns` (+ refunds, credit notes) | **Commandes** (+ *Achats* tab on a customer) |
+| Quotes | `quotes` — draft → sent → accepted → converted at checkout (`quoteId`) | **Devis** |
+| Invoices & printing | `invoices`, `…/document`, `orders/:id/receipt` → printable HTML in fr/en/ar | **Factures**, print buttons |
+
+How the money side works — worth knowing before touching it:
+
+- **The server prices everything.** Clients send variant ids, quantities, discounts and lens choices; never prices. Amounts are
+  integer cents ([packages/shared/src/pricing.ts](packages/shared/src/pricing.ts)), tax-inclusive by default, rounded half-up
+  per line so invoice lines always add up. `POST /pos/price` runs the same code path the checkout charges, so the screen can't differ.
+- **Checkout is one transaction**: order + lines + lens config + stock (`StockService`) + numbered invoice + payments + drawer
+  movement. A failure anywhere (e.g. not enough stock for the last line) leaves nothing behind.
+- **Retries are safe**: the till sends a `clientRef` per attempt; resubmitting it (double-click, flaky network, two tabs) returns the original order.
+- **Prescription orders** may be paid with a deposit (`pos.min_deposit_pct`, default 30%); the balance stays on the order until
+  paid, and the order can only be handed over at zero balance. Lens choices are validated against the prescription
+  (expired, ADD for progressives, power range of the chosen lens, treatments offered) and a snapshot is stored.
+- **Cash accountability**: cash payments/refunds/in/out all write signed drawer movements; expected cash = float + movements.
+  A sale needs an open session (`pos.require_open_session`, default on). Card/transfer money never enters the drawer total.
+- **Returns** refund exactly what was paid, to the cent (the last unit takes the rounding remainder), put stock back unless
+  damaged, and issue a credit note. Refunds need `pos:refund`; cash refunds also need the cash to be in the drawer.
+- **Documents** use a small safe template engine ([documents/template-engine.ts](apps/api/src/modules/documents/template-engine.ts)):
+  every value is HTML-escaped, there is no raw output and no code execution, so a customer name can't inject markup. Templates are
+  editable per store (`DocumentTemplate`); built-ins are the fallback.
+- Settings you can change (group `pos`): `require_open_session`, `min_deposit_pct`, `allow_negative_stock`; `checkout.prescription_required_for_lenses`.
+
 ## Troubleshooting
 
 - **`ERR_PNPM_IGNORED_BUILDS` (install exits 1)** — pnpm 12 refuses to finish installing when a dependency has an
@@ -151,7 +181,7 @@ Design rules worth knowing before adding modules:
 
 1. ✅ **Foundations** — monorepo, infra, schema, auth + RBAC, seed, admin + storefront shells
 2. ✅ **Products, inventory, customers, prescriptions**
-3. POS, sales, invoices
+3. ✅ **POS, sales, invoices**
 4. Purchasing, workshop / fabrication
 5. Storefront commerce (catalog, lens configurator, checkout), appointments
 6. HR, finance, reports

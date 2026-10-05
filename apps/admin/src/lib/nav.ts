@@ -1,10 +1,15 @@
-import { LayoutDashboard, Users, ShieldCheck, Store, ScrollText, Glasses, Tags, Boxes, UserRound, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, Store, ScrollText, Glasses, Tags, Boxes, UserRound, ShoppingCart, ReceiptText, FileText, Landmark, ClipboardList, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { key: string; href: string; icon: LucideIcon; permission?: string }
 
 /** Add one entry per module as phases land; the sidebar hides items the user lacks permission for. */
 export const NAV: NavItem[] = [
   { key: 'dashboard', href: '/', icon: LayoutDashboard },
+  { key: 'pos', href: '/pos', icon: ShoppingCart, permission: 'pos:access' },
+  { key: 'orders', href: '/orders', icon: ClipboardList, permission: 'orders:read' },
+  { key: 'quotes', href: '/quotes', icon: FileText, permission: 'quotes:read' },
+  { key: 'invoices', href: '/invoices', icon: ReceiptText, permission: 'invoices:read' },
+  { key: 'registers', href: '/pos/sessions', icon: Landmark, permission: 'pos:manage_register' },
   { key: 'customers', href: '/customers', icon: UserRound, permission: 'customers:read' },
   { key: 'products', href: '/products', icon: Glasses, permission: 'products:read' },
   { key: 'inventory', href: '/inventory', icon: Boxes, permission: 'inventory:read' },

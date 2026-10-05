@@ -10,7 +10,9 @@ export function useFormat(currency = 'MAD') {
     const int = new Intl.NumberFormat(locale);
     const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
     const dateTimeFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' });
+    const symbol = money.formatToParts(0).find((p) => p.type === 'currency')?.value ?? currency;
     return {
+      symbol,
       money: (n: number | null | undefined) => (n == null ? '—' : money.format(n)),
       int: (n: number | null | undefined) => (n == null ? '—' : int.format(n)),
       date: (d: string | Date | null | undefined) => (d ? dateFmt.format(new Date(d)) : '—'),

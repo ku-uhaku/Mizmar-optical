@@ -20,6 +20,7 @@ import { Tabs } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { PrescriptionsTab } from './prescriptions-tab';
 import { AddressesTab, InsuranceTab, NotesTab } from './sections';
+import { PurchasesTab } from './purchases-tab';
 
 const num = (v: unknown) => v;
 
@@ -98,12 +99,13 @@ export default function CustomerPage({ params }: { params: Promise<{ id: string 
         {cust && (<>
           <PageHeader title={`${cust.firstName} ${cust.lastName}`} subtitle={[cust.code, cust.phone, cust.email].filter(Boolean).join(' · ')}
             actions={can('customers:delete') && <Button variant="outline" onClick={() => confirm(t('confirmDelete', { name: cust.firstName })) && del.mutate()}><Trash2 className="text-destructive" /> {c('delete')}</Button>} />
-          <Tabs value={tab} onChange={setTab} items={[{ value: 'overview', label: t('tabs.overview') }, { value: 'rx', label: r('title') }, { value: 'addresses', label: `${t('tabs.addresses')} (${cust.addresses.length})` }, { value: 'notes', label: `${t('tabs.notes')} (${cust.noteItems.length})` }, { value: 'insurance', label: `${t('tabs.insurance')} (${cust.insurances.length})` }]} />
+          <Tabs value={tab} onChange={setTab} items={[{ value: 'overview', label: t('tabs.overview') }, { value: 'rx', label: r('title') }, { value: 'addresses', label: `${t('tabs.addresses')} (${cust.addresses.length})` }, { value: 'notes', label: `${t('tabs.notes')} (${cust.noteItems.length})` }, { value: 'insurance', label: `${t('tabs.insurance')} (${cust.insurances.length})` }, ...(can('orders:read') ? [{ value: 'purchases', label: t('tabs.purchases') }] : [])]} />
           {tab === 'overview' && <Overview c={cust} />}
           {tab === 'rx' && <PrescriptionsTab customerId={id} />}
           {tab === 'addresses' && <AddressesTab customerId={id} addresses={cust.addresses} />}
           {tab === 'notes' && <NotesTab customerId={id} notes={cust.noteItems} />}
           {tab === 'insurance' && <InsuranceTab customerId={id} insurances={cust.insurances} />}
+          {tab === 'purchases' && <PurchasesTab customerId={id} />}
         </>)}
       </div>
     </RequirePermission>

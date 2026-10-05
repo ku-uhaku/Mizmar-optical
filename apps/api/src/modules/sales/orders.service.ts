@@ -89,6 +89,24 @@ export class OrdersService {
     }
   }
 
+  // ------------------------------------------------------------------ price preview
+  /**
+   * What checkout WOULD charge for this cart, with no side effects. The till calls this as the cashier builds the cart, so the
+   * number on screen always comes from the same code path that charges the customer (and lens/prescription problems surface early).
+   */
+  async preview(lines: CheckoutDto['lines'], customerId: string | undefined, user: AuthUser, activeStoreId?: string | null) {
+    const storeId = this.activeStore(user, activeStoreId);
+    if (lines.length === 0) return { lines: [], subtotal: 0, discountTotal: 0, taxTotal: 0, total: 0, hasLens: false, minimumPayment: 0, depositPercent: null };
+    const cart = await this.pricing.price(lines, { user, storeId, customerId });
+    const pct = await this.settings.value<number>('min_deposit_pct', 30, storeId);
+    return {
+      lines: cart.lines.map((l) => ({ variantId: l.variantId, productType: l.productType, sku: l.sku, description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, gross: l.gross, discount: l.discount, taxRatePct: l.taxRatePct, taxAmount: l.taxAmount, lineTotal: l.lineTotal, lens: l.lens && { lensTypeName: l.lens.lensTypeName, lensEntryName: l.lens.lensEntryName, lensPrice: l.lens.lensPrice, treatments: l.lens.treatments, treatmentsPrice: l.lens.treatmentsPrice, prescriptionId: l.lens.prescriptionId } })),
+      subtotal: cart.subtotal, discountTotal: cart.discountTotal, taxTotal: cart.taxTotal, total: cart.total, hasLens: cart.hasLens,
+      // what must be collected now: everything, or (prescription orders) the minimum deposit
+      minimumPayment: cart.hasLens ? fromCents(Math.ceil((toCents(cart.total) * pct) / 100)) : cart.total, depositPercent: cart.hasLens ? pct : null,
+    };
+  }
+
   // ------------------------------------------------------------------ checkout
   async checkout(dto: CheckoutDto, user: AuthUser, activeStoreId?: string | null) {
     const storeId = this.activeStore(user, activeStoreId);
