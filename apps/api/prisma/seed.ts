@@ -227,7 +227,11 @@ async function seedCatalog() {
         where: { sku }, update: {},
         create: { productId: product.id, sku, barcode: `61${String(Math.abs(hash(sku))).padStart(11, '0').slice(0, 11)}`, color, colorHex: hex || null, size: p.type === 'CONTACT_LENS' ? 'BC 8.4 / Ø 14.3' : '52-18-145', price: p.price, cost: p.cost },
       });
-      for (const w of warehouses) await prisma.stockLevel.upsert({ where: { variantId_warehouseId: { variantId: variant.id, warehouseId: w.id } }, update: {}, create: { variantId: variant.id, warehouseId: w.id, quantity: 8, reorderPoint: 3, reorderQty: 10 } });
+      for (const w of warehouses) {
+        await prisma.stockLevel.upsert({ where: { variantId_warehouseId: { variantId: variant.id, warehouseId: w.id } }, update: {}, create: { variantId: variant.id, warehouseId: w.id, quantity: 8, reorderPoint: 3, reorderQty: 10 } });
+        // every stock level is backed by the ledger: the opening quantity is an INITIAL movement
+        await ensure(prisma.stockMovement, { variantId: variant.id, warehouseId: w.id, type: 'INITIAL' }, { storeId: w.storeId, quantity: 8, balanceAfter: 8, unitCost: p.cost, note: 'Opening stock (seed)' });
+      }
     }
   }
   log('brands, categories, shapes/materials, lens types/treatments/catalog, 6 demo products with stock');

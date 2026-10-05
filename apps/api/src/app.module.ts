@@ -20,6 +20,12 @@ import { AuditModule } from './modules/audit/audit.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { StorefrontModule } from './modules/storefront/storefront.module';
+import { NumberingModule } from './modules/numbering/numbering.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { ProductsModule } from './modules/products/products.module';
+import { MediaModule } from './modules/media/media.module';
+import { CustomersModule } from './modules/customers/customers.module';
 import { HealthController } from './modules/health/health.controller';
 
 const AUTH_ROUTES = /\/auth\/(login|refresh|forgot-password|reset-password)/;
@@ -48,6 +54,12 @@ const AUTH_ROUTES = /\/auth\/(login|refresh|forgot-password|reset-password)/;
     SettingsModule,
     AuditModule,
     StorefrontModule,
+    NumberingModule,
+    CatalogModule,
+    InventoryModule,
+    ProductsModule,
+    MediaModule,
+    CustomersModule,
   ],
   controllers: [HealthController],
   providers: [

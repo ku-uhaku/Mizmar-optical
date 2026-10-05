@@ -4,6 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
 import type { Env } from './config/env';
+import { Prisma } from './generated/prisma/client';
+
+// Money / lens powers are Decimal(12,2)/(5,2): safe as JS numbers, and far friendlier to API clients than strings.
+(Prisma.Decimal.prototype as any).toJSON = function (this: { toNumber(): number }) { return this.toNumber(); };
 
 /** Shared by main.ts and the e2e tests so tests exercise the real pipeline. */
 export function setupApp(app: INestApplication) {

@@ -28,6 +28,7 @@ export const PERMISSION_CATALOG = {
   hr: ['read', 'create', 'update', 'delete', 'payroll'],
   finance: ['read', 'create', 'update', 'approve'],
   reports: ['read', 'export'],
+  media: ['upload'],
   cms: ['read', 'create', 'update', 'delete', 'publish'],
 } as const;
 
@@ -62,7 +63,7 @@ export const SYSTEM_ROLES: Record<string, { name: string; description: string; p
     permissions: [
       'customers:read', 'customers:create', 'customers:update',
       'prescriptions:read', 'prescriptions:create', 'prescriptions:update',
-      'products:read', 'catalog:read', 'inventory:read',
+      'products:read', 'catalog:read', 'inventory:read', 'media:upload',
       'pos:access', 'orders:read', 'orders:create', 'quotes:read', 'quotes:create', 'quotes:update',
       'invoices:read', 'payments:read', 'payments:create',
       'workshop:read', 'workshop:create', 'appointments:read', 'appointments:create', 'appointments:update',

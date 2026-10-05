@@ -1,7 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../generated/prisma/client';
+import { Prisma, PrismaClient } from '../generated/prisma/client';
+
+/** The client handed to `prisma.raw.$transaction(async (tx) => …)`; pass it to helpers that must run in the caller's transaction. */
+export type Tx = Prisma.TransactionClient;
 import type { Env } from '../config/env';
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
