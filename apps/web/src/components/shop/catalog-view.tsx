@@ -4,6 +4,7 @@ import { FALLBACK_BRANDING, publicApi, publicQuery, tr, type Branding, type Face
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
+import { FilterPanel } from './filter-panel';
 
 const KEYS = ['type', 'brand', 'gender', 'shape', 'material', 'color', 'size', 'minPrice', 'maxPrice', 'inStock', 'sort', 'search'] as const;
 export type CatalogParams = Partial<Record<(typeof KEYS)[number] | 'page', string>>;
@@ -34,8 +35,7 @@ export async function CatalogView({ params, category, basePath }: { params: Cata
       </nav>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[16rem_1fr]">
-        <details className="rounded-lg border bg-card p-4 lg:open:block" open={active > 0}>
-          <summary className="cursor-pointer font-medium lg:pointer-events-none">{t('filters')}{active > 0 && ` (${active})`}</summary>
+        <FilterPanel summary={<>{t('filters')}{active > 0 && ` (${active})`}</>} activeCount={active}>
           <form method="get" action={`/${locale}${basePath}`} className="mt-4 space-y-4 text-sm">
             {params.search && <input type="hidden" name="search" value={params.search} />}
             {params.type && <input type="hidden" name="type" value={params.type} />}
@@ -58,7 +58,7 @@ export async function CatalogView({ params, category, basePath }: { params: Cata
             <label className="flex items-center gap-2"><input type="checkbox" name="inStock" value="true" defaultChecked={params.inStock === 'true'} className="size-4 accent-[var(--primary)]" /> {t('inStockOnly')}</label>
             <div className="flex gap-2"><Button type="submit" className="flex-1">{t('apply')}</Button><Button asChild variant="outline"><Link href={(params.type ? `${basePath}?type=${params.type}` : basePath) as '/'}>{t('reset')}</Link></Button></div>
           </form>
-        </details>
+        </FilterPanel>
 
         <section aria-live="polite">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

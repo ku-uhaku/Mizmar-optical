@@ -1,4 +1,6 @@
 import 'server-only';
+import type { Tr } from './content';
+export { tr, type Tr } from './content';
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -25,7 +27,6 @@ export interface Branding {
   currencies: { code: string; symbol: string; decimals: number; isDefault: boolean }[];
 }
 export interface MenuItem { id: string; label: string; url: string | null; openInNewTab: boolean; translations: Tr | null; children: MenuItem[] }
-export type Tr = Record<string, Record<string, string>>;
 export interface Store { id: string; name: string; slug: string; phone: string | null; email: string | null; address: string | null; city: string | null; openingHours: Record<string, { open: string; close: string }[]> | null }
 export interface ProductCard { id: string; slug: string; name: string; type: string; translations: Tr | null; brand: string | null; image: { url: string; alt: string | null } | null; priceFrom: number | null; colors: string[] }
 export interface HomeSection { id: string; type: string; title: string | null; subtitle: string | null; translations: Tr | null; config: Record<string, unknown>; data: any }
@@ -35,9 +36,6 @@ export const FALLBACK_BRANDING: Branding = {
   settings: {}, languages: [], currencies: [{ code: 'MAD', symbol: 'DH', decimals: 2, isDefault: true }],
 };
 
-/** Dashboard-editable translations: `translations[locale][field]` wins over the base (French) column. */
-export const tr = <T extends { translations?: Tr | null }>(o: T, field: keyof T & string, locale: string): string =>
-  (o.translations?.[locale]?.[field] as string | undefined) ?? (o[field] as unknown as string);
 
 // ---------------------------------------------------------------- shop (server-side reads)
 export interface ShopCard {

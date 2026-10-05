@@ -28,6 +28,7 @@ export function WishlistButton({ productId, className = '' }: { productId: strin
 
   const toggle = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation(); // the heart sits on a clickable card
+    if (!ready) return; // still restoring the session: do not mistake a signed-in customer for a guest
     if (!user) return router.push('/compte/connexion' as '/');
     const next = !on;
     setOn(next);

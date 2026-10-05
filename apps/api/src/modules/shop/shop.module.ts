@@ -9,13 +9,14 @@ import { ShopContentService } from './content.service';
 import { PaymentProviders } from './payment-providers';
 import { ShopCatalogService } from './shop-catalog.service';
 import { ShopCheckoutService } from './shop-checkout.service';
+import { CouponsController, CouponsService, ModerationController, ShippingMethodsController, ShippingMethodsService } from './shop-admin';
 import { FulfillmentService } from './fulfillment.service';
 import { AccountController, FulfillmentController, ShopController } from './shop.controller';
 
 @Module({
   imports: [AuthModule, InventoryModule, MediaModule, SalesModule, SettingsModule],
-  controllers: [ShopController, AccountController, FulfillmentController],
-  providers: [ShopCatalogService, ShopCheckoutService, ShopContentService, AccountService, FulfillmentService, PaymentProviders],
+  controllers: [ShopController, AccountController, FulfillmentController, CouponsController, ShippingMethodsController, ModerationController],
+  providers: [ShopCatalogService, ShopCheckoutService, ShopContentService, AccountService, FulfillmentService, PaymentProviders, CouponsService, ShippingMethodsService],
   exports: [PaymentProviders, ShopCheckoutService],
 })
 export class ShopModule {}

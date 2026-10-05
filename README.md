@@ -3,10 +3,10 @@
 Optical-store platform: a public **storefront** and an **admin ERP** (POS, inventory, purchasing, lens workshop,
 appointments, HR, finance, reports), fully configurable from the dashboard.
 
-> **Status: Phases 1–4 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; the
+> **Status: Phases 1–5 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; the
 > **point of sale** (register sessions, checkout, prescription orders with deposits, returns, quotes, invoices); and
 > **purchasing + workshop** (suppliers, purchase orders, goods receipts, supplier invoices/payments, lens-lab job orders).
-> Storefront commerce, HR, finance and reports arrive in phases 5–7 (see [Roadmap](#roadmap)).
+> **storefront commerce + appointments** (public catalog, lens configurator, cart/coupons, checkout, accounts, booking). HR, finance and reports arrive in phases 6–7 (see [Roadmap](#roadmap)).
 
 | Part | Stack | Port |
 |---|---|---|
@@ -172,6 +172,37 @@ How the money side works — worth knowing before touching it:
 - Roles: technicians can self-assign and run the bench; assigning others needs `workshop:assign`; supplier-invoice payment
   needs `finance:approve` (accountants). New screens/permissions follow the existing module catalog.
 
+## What phase 5 added (storefront commerce, appointments)
+
+| Area | API | Where |
+|---|---|---|
+| Catalog | `public/products` (filters: type, brand, category, gender, shape, material, colour, size, price, in-stock; sort), `public/facets`, `public/products/:slug`, `public/lens-options` | **web** `/catalogue`, `/produit/[slug]` |
+| Lens configurator | prescription saved to the customer's account (typed, or an uploaded scan), priced by `public/cart/quote` | product page |
+| Cart & checkout | `public/cart/quote` (server prices, coupons, delivery zones), `public/checkout` (guest or account; COD, bank transfer, pluggable online providers) | `/panier`, `/commande` |
+| Tracking | `public/orders/track` (order number **and** the email/phone used) | `/suivi` |
+| Accounts | `public/auth/register`, shared `auth/login`, `account/*` (profile, addresses, wishlist, prescriptions, orders + cancel, reviews, appointments) | `/compte/*` |
+| Appointments | `public/appointments/{types,practitioners,slots}`, booking, lookup/cancel; staff `appointments`, calendar, `practitioners/:id/availability` + `time-off`, `appointment-types` | `/rendez-vous`; admin **Rendez-vous** |
+| Content | `public/blog`, `public/contact` (honeypot), `public/newsletter` | `/blog`, `/contact` |
+| Staff tools | online fulfilment (`orders/:id/{confirm-payment,ship,shipment-delivered,ready-for-pickup}`), `coupons`, `shipping-methods`, `reviews` + `contact-messages` moderation | admin order page, **Promotions & livraison**, **Avis & messages** |
+
+- **Customers and staff share one login system, with a wall between them.** Every route refuses a customer token unless it opts in
+  (`@AllowCustomer` / `@CustomerOnly`), and `@CustomerOnly` routes refuse staff. So a customer can never reach an admin endpoint, even one
+  someone forgot to put a permission on. Covered by an e2e test over a dozen staff routes.
+- **The server prices everything.** The cart in the browser carries display data only; `cart/quote` and `checkout` re-read prices, apply the
+  coupon (spread over lines to the cent), shipping (free-over thresholds, city zones) and VAT. Stock is taken in the same transaction
+  (`StockService`, race-safe: parallel buyers of the last pair → exactly one wins). Retrying a checkout with the same `clientRef` returns the
+  same order. Coupon limits are re-checked under a row lock.
+- **Prescription lenses online** require an account (the prescription lives there). A typed or scanned prescription is flagged on the
+  workshop ticket ("à vérifier") until an optician verifies it; the existing workshop flow takes over.
+- **Appointments** are computed in the store's timezone from each practitioner's weekly hours, minus bookings (with buffers) and time off,
+  with minimum notice / horizon / cancel-window settings (`appointments.min_notice_hours`, `max_days_ahead`, `cancel_hours`, `auto_confirm`).
+  Booking takes a per-practitioner lock, so simultaneous requests for one slot can't both succeed. A 24-hour reminder email is sent by an hourly
+  BullMQ job.
+- **Payments:** cash on delivery / at the store and bank transfer work out of the box. Online cards use a provider interface
+  (`modules/shop/payment-providers.ts`); only a **simulated `demo` provider** ships (development only, refused in production). A real gateway
+  (CMI, Stripe, PayPal) is one class that returns `CAPTURED` or a redirect URL.
+- Not built yet: real payment gateway, SMS/WhatsApp sending (queued and logged), email verification at sign-up, WhatsApp/Google reviews import.
+
 ## Troubleshooting
 
 - **`ERR_PNPM_IGNORED_BUILDS` (install exits 1)** — pnpm 12 refuses to finish installing when a dependency has an
@@ -210,6 +241,6 @@ How the money side works — worth knowing before touching it:
 2. ✅ **Products, inventory, customers, prescriptions**
 3. ✅ **POS, sales, invoices**
 4. ✅ **Purchasing, workshop / fabrication**
-5. Storefront commerce (catalog, lens configurator, checkout), appointments
+5. ✅ **Storefront commerce (catalog, lens configurator, checkout), appointments**
 6. HR, finance, reports
 7. Full settings UI, i18n polish, tests, hardening

@@ -404,4 +404,49 @@ describe('Storefront API: accounts, catalog, cart, checkout, tracking, fulfilmen
       expect((await anon.get('/public/blog?limit=50').expect(200)).body.data.map((p: { slug: string }) => p.slug)).toContain(slug);
     });
   });
+
+  describe('admin: coupons, shipping methods, moderation', () => {
+    it('coupons: validated, unique, protected once used; an admin-made coupon works at checkout', async () => {
+      const code = `ADM${uid()}`.toUpperCase().slice(0, 14);
+      await f.admin.post('/coupons', { code: 'bad code', type: 'PERCENT', value: 10 }).expect(400);
+      await f.admin.post('/coupons', { code, type: 'NOPE', value: 10 }).expect(400);
+      const c = (await f.admin.post('/coupons', { code, type: 'PERCENT', value: 25, minSubtotal: 100, maxDiscount: 60, perCustomerLimit: 1 }).expect(201)).body;
+      await f.admin.post('/coupons', { code, type: 'PERCENT', value: 5 }).expect(409);
+      await f.technician.post('/coupons', { code: 'ZZZ99', type: 'PERCENT', value: 5 }).expect(403);
+      const p = await product({ price: 1000 });
+      const q = (await anon.post('/public/cart/quote', { lines: [{ variantId: p.variantId, quantity: 1 }], couponCode: code }).expect(200)).body;
+      expect(q.coupon.discount).toBe(60); // 25% of 1000 capped at 60
+      await anon.post('/public/checkout', checkoutBody(p.variantId, { couponCode: code })).expect(201);
+      expect((await f.admin.del(`/coupons/${c.id}`)).status).toBe(409); // used
+      await f.admin.patch(`/coupons/${c.id}`, { isActive: false }).expect(200);
+      expect((await anon.post('/public/cart/quote', { lines: [{ variantId: p.variantId, quantity: 1 }], couponCode: code }).expect(200)).body.coupon.error).toBe('COUPON_UNKNOWN');
+    });
+
+    it('shipping methods: CRUD with zones, permission checked, used ones protected', async () => {
+      const code = `m-${uid()}`.slice(0, 20);
+      const m = (await f.admin.post('/shipping-methods', { code, name: 'Test courier', price: 25, zones: ['Fès'], estimatedDaysMin: 1, estimatedDaysMax: 3 }).expect(201)).body;
+      await f.admin.post('/shipping-methods', { code, name: 'Dup' }).expect(409);
+      await f.admin.post('/shipping-methods', { code: 'Bad Code', name: 'x' }).expect(400);
+      await f.cashier.post('/shipping-methods', { code: 'zz-1', name: 'x' }).expect(403);
+      const quote = (await anon.post('/public/cart/quote', { lines: [{ variantId: (await product({ price: 200 })).variantId, quantity: 1 }], fulfillment: 'DELIVERY', city: 'fès' }).expect(200)).body;
+      expect(quote.shippingOptions.some((o: { id: string }) => o.id === m.id)).toBe(true); // zone match ignores case
+      expect((await f.admin.del(`/shipping-methods/${m.id}`)).status).toBe(204);
+    });
+
+    it('reviews and contact messages can be moderated by staff only', async () => {
+      const c = await register();
+      const p = await product();
+      await c.post('/account/reviews', { productId: p.id, rating: 3 }).expect(201);
+      const list = (await f.admin.get('/reviews?status=PENDING').expect(200)).body.data as { id: string; productId: string }[];
+      const mine = list.find((r) => r.productId === p.id)!;
+      expect(mine).toBeTruthy();
+      await f.technician.post(`/reviews/${mine.id}/approve`).expect(403);
+      expect((await f.admin.post(`/reviews/${mine.id}/approve`).expect(200)).body.status).toBe('APPROVED');
+      expect((await anon.get(`/public/products/${p.slug}`)).body.reviews).toHaveLength(1);
+      await anon.post('/public/contact', { name: 'Zed', email: 'zed@example.com', message: 'Hello there, a question' }).expect(201);
+      const msg = (await f.admin.get('/contact-messages?status=NEW').expect(200)).body.data[0];
+      expect((await f.admin.post(`/contact-messages/${msg.id}/status`, { status: 'REPLIED' }).expect(200)).body.status).toBe('REPLIED');
+      await c.get('/contact-messages').expect(403);
+    });
+  });
 });

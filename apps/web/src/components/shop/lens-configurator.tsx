@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { tr, type LensOption, type ShopVariant } from '@/lib/api';
+import { tr } from '@/lib/content';
+import type { LensOption, ShopVariant } from '@/lib/api';
 import { api } from '@/lib/client-api';
 import { useAuth } from '@/lib/auth';
 import { errorText } from '@/lib/errors';

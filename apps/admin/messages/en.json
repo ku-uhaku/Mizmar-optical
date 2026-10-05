@@ -62,7 +62,10 @@
     "suppliers": "Suppliers",
     "purchasing": "Purchasing",
     "payables": "Supplier invoices",
-    "workshop": "Workshop"
+    "workshop": "Workshop",
+    "appointments": "Appointments",
+    "promotions": "Promotions & delivery",
+    "inbox": "Reviews & messages"
   },
   "auth": {
     "title": "Mizmar Optique",
@@ -875,7 +878,160 @@
       "FRAME_REQUIRED": "Describe the frame (or pick one from stock).",
       "NOTHING_DUE": "Nothing is due on this invoice.",
       "INVALID_TECHNICIAN": "That person cannot work in this store.",
-      "UNKNOWN_SUPPLIER": "Unknown or inactive supplier."
+      "UNKNOWN_SUPPLIER": "Unknown or inactive supplier.",
+      "SLOT_TAKEN": "That time was just taken: pick another.",
+      "SLOT_UNAVAILABLE": "That time is not available.",
+      "NO_PRACTITIONER": "Nobody has a schedule in this store yet.",
+      "UNKNOWN_PRACTITIONER": "That person does not take appointments here.",
+      "INVALID_PRACTITIONER": "That person does not work in this store.",
+      "INVALID_HOURS": "A window must end after it starts.",
+      "OVERLAPPING_HOURS": "Two windows on the same day overlap.",
+      "INVALID_RANGE": "The end must be after the start.",
+      "RANGE_TOO_LARGE": "Choose a shorter period.",
+      "INVALID_PAYMENT_METHOD": "This payment method cannot be used here."
+    }
+  },
+  "shopAdmin": {
+    "appointments": {
+      "title": "Appointments"
+    },
+    "tabs": {
+      "calendar": "Calendar",
+      "list": "List",
+      "types": "Services",
+      "schedules": "Schedules"
+    },
+    "newAppointment": "New appointment",
+    "newAppointmentHint": "For a customer or a walk-in visitor, from the free times of the active store.",
+    "prev": "Previous week",
+    "next": "Next week",
+    "today": "Today",
+    "practitioner": "Practitioner",
+    "everyone": "Everyone",
+    "timeOff": "Time off",
+    "when": "When",
+    "visitor": "Visitor",
+    "service": "Service",
+    "source": "Booked via",
+    "sources": {
+      "ONLINE": "Website",
+      "STAFF": "In store",
+      "PHONE": "Phone"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "CHECKED_IN": "Checked in",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "NO_SHOW": "No show"
+    },
+    "actions": {
+      "CONFIRMED": "Confirm",
+      "CHECKED_IN": "Check in",
+      "COMPLETED": "Complete",
+      "CANCELLED": "Cancel",
+      "NO_SHOW": "No show"
+    },
+    "confirmCancel": "Cancel this appointment?",
+    "contact": "Contact",
+    "reason": "Reason",
+    "reschedule": "Move to",
+    "saveChanges": "Save changes",
+    "searchCustomer": "Search a customer…",
+    "orWalkIn": "…or enter a walk-in visitor",
+    "name": "Name",
+    "phone": "Phone",
+    "date": "Date",
+    "time": "Time",
+    "noSlots": "No free time this day for this service.",
+    "duration": "Duration (min)",
+    "buffer": "Buffer after (min)",
+    "color": "Colour",
+    "online": "Online",
+    "bookableOnline": "Customers can book this online",
+    "weeklyHours": "Weekly hours",
+    "closed": "Closed",
+    "addWindow": "Add hours",
+    "from": "From",
+    "to": "To",
+    "addTimeOff": "Add time off",
+    "timeOffConflicts": "Saved. {n} existing appointment(s) fall in this period: reschedule them.",
+    "noSchedule": "no schedule",
+    "promotions": {
+      "title": "Promotions & delivery",
+      "coupons": "Coupons",
+      "shipping": "Delivery methods"
+    },
+    "coupons": {
+      "type": {
+        "PERCENT": "Percent",
+        "FIXED": "Fixed amount",
+        "FREE_SHIPPING": "Free delivery"
+      },
+      "value": "Value",
+      "valueHint": "Percent (0-100) or amount",
+      "minSubtotal": "Minimum cart",
+      "maxDiscount": "Maximum discount",
+      "usageLimit": "Total uses",
+      "perCustomerLimit": "Uses per customer",
+      "startsAt": "Starts on",
+      "endsAt": "Ends on",
+      "used": "Used",
+      "validity": "Validity"
+    },
+    "shipping": {
+      "freeOver": "Free over",
+      "zones": "Cities served",
+      "zonesHint": "Comma-separated; leave empty for everywhere",
+      "everywhere": "Everywhere",
+      "daysMin": "Min days",
+      "daysMax": "Max days"
+    },
+    "inbox": {
+      "title": "Reviews & messages",
+      "reviews": "Reviews",
+      "messages": "Messages",
+      "product": "Product",
+      "rating": "Rating",
+      "review": "Review",
+      "approve": "Approve",
+      "reject": "Reject",
+      "done": "Done",
+      "status": "Status",
+      "from": "From",
+      "message": "Message",
+      "reviewStatus": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "messageStatus": {
+        "NEW": "New",
+        "READ": "Read",
+        "REPLIED": "Replied",
+        "SPAM": "Spam"
+      }
+    },
+    "onlineOrder": {
+      "title": "Online order",
+      "fulfillment": {
+        "PICKUP": "Pickup",
+        "DELIVERY": "Delivery",
+        "IN_STORE": "In store"
+      },
+      "confirmPayment": "Confirm payment received",
+      "confirmPaymentHint": "Record a bank transfer or cheque. Cash is taken at the till.",
+      "method": "Method",
+      "reference": "Reference",
+      "ship": "Ship order",
+      "shipHint": "Hand the parcel to the courier. The customer sees the tracking number.",
+      "carrier": "Carrier",
+      "tracking": "Tracking number",
+      "delivered": "Mark delivered",
+      "deliveredCollected": "Delivered, cash collected",
+      "deliveredNoCash": "Delivered, not paid yet",
+      "readyForPickup": "Ready for pickup (notify customer)"
     }
   }
 }

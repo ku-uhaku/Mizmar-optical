@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, ShieldCheck, Store, ScrollText, Glasses, Tags, Boxes, UserRound, ShoppingCart, ReceiptText, FileText, Landmark, ClipboardList, Truck, PackageSearch, Wrench, Receipt, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, Store, ScrollText, Glasses, Tags, Boxes, UserRound, ShoppingCart, ReceiptText, FileText, Landmark, ClipboardList, Truck, PackageSearch, Wrench, Receipt, CalendarDays, TicketPercent, Inbox, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { key: string; href: string; icon: LucideIcon; permission?: string }
 
@@ -18,6 +18,9 @@ export const NAV: NavItem[] = [
   { key: 'purchasing', href: '/purchasing', icon: PackageSearch, permission: 'purchasing:read' },
   { key: 'payables', href: '/payables', icon: Receipt, permission: 'finance:read' },
   { key: 'workshop', href: '/workshop', icon: Wrench, permission: 'workshop:read' },
+  { key: 'appointments', href: '/appointments', icon: CalendarDays, permission: 'appointments:read' },
+  { key: 'promotions', href: '/promotions', icon: TicketPercent, permission: 'coupons:read' },
+  { key: 'inbox', href: '/inbox', icon: Inbox, permission: 'cms:read' },
   { key: 'users', href: '/users', icon: Users, permission: 'users:read' },
   { key: 'roles', href: '/roles', icon: ShieldCheck, permission: 'roles:read' },
   { key: 'stores', href: '/stores', icon: Store, permission: 'stores:read' },

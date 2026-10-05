@@ -259,7 +259,8 @@ export class AppointmentsService {
       this.prisma.db.appointment.findMany({ where, include: INCLUDE, orderBy: { startsAt: 'asc' }, take: 1000 }),
       this.prisma.db.practitionerTimeOff.findMany({ where: { ...(dto.practitionerId && { practitionerId: dto.practitionerId }), startsAt: { lt: dto.to }, endsAt: { gt: dto.from } }, take: 200 }),
     ]);
-    return { appointments, timeOff };
+    const tz = dto.storeId ? (await this.prisma.db.store.findFirst({ where: { id: dto.storeId }, select: { timezone: true } }))?.timezone : undefined;
+    return { appointments, timeOff, timezone: tz ?? 'UTC' };
   }
 
   async staffBook(dto: D.StaffBookDto, user: AuthUser) {

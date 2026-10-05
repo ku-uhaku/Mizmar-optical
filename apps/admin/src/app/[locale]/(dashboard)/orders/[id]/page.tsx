@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { payTone, statusTone } from '../page';
+import { OnlineActions } from './online-actions';
 import { CancelDialog, PaymentDialog, ReturnDialog, type OrderView } from './order-dialogs';
 
 export default function OrderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,6 +60,8 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             {view.customer && <Link href={`/customers/${view.customer.id}` as '/'} className="text-sm underline">{view.customer.firstName} {view.customer.lastName}</Link>}
             {view.cancelReason && <span className="text-sm text-muted-foreground">— {view.cancelReason}</span>}
           </div>
+
+          <OnlineActions order={view as never} />
 
           <div className="grid gap-4 lg:grid-cols-3">
             <Card className="lg:col-span-2"><CardHeader><CardTitle>{t('items')}</CardTitle></CardHeader><CardContent>

@@ -2,7 +2,8 @@
 import { useSyncExternalStore } from 'react';
 
 type Toast = { id: number; text: string; kind: 'ok' | 'error' };
-let toasts: Toast[] = [];
+const NONE: Toast[] = [];
+let toasts: Toast[] = NONE;
 let seq = 0;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -17,7 +18,7 @@ export function notify(text: string, kind: Toast['kind'] = 'ok') {
 }
 
 export function Toaster() {
-  const list = useSyncExternalStore(subscribe, () => toasts, () => []);
+  const list = useSyncExternalStore(subscribe, () => toasts, () => NONE);
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4">
       {list.map((t) => (

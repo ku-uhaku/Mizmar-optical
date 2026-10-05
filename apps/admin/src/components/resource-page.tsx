@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 export interface FieldDef {
   name: string;
   label: string;
-  type?: 'text' | 'number' | 'checkbox' | 'select' | 'textarea' | 'multiselect';
+  type?: 'text' | 'number' | 'checkbox' | 'select' | 'textarea' | 'multiselect' | 'date';
   required?: boolean;
   step?: string;
   hint?: string;
@@ -29,6 +29,8 @@ export interface FieldDef {
   createOnly?: boolean;
   /** Initial value when editing (needed when the API shape differs from the form shape, e.g. multiselect ids). */
   initial?: (row: any) => unknown;
+  /** Convert the form value before sending (e.g. a comma-separated list into an array). Return undefined to send nothing/null. */
+  toBody?: (value: any) => unknown;
 }
 
 type Row = { id: string; [k: string]: any };
@@ -83,7 +85,8 @@ export function ResourcePage({ queryKey, endpoint, module, columns, fields, defa
       for (const f of fields) {
         if (f.createOnly && !isNew) continue;
         const v = values[f.name];
-        if (f.type === 'checkbox') body[f.name] = !!v;
+        if (f.toBody) { const r = f.toBody(v); if (r !== undefined) body[f.name] = r; else if (!isNew) body[f.name] = null; }
+        else if (f.type === 'checkbox') body[f.name] = !!v;
         else if (f.type === 'multiselect') body[f.name] = v ?? [];
         else if (f.type === 'number') { if (v === '' || v == null || Number.isNaN(v)) { if (!isNew) body[f.name] = null; } else body[f.name] = Number(v); }
         else if (v === '' || v == null) { if (!isNew) body[f.name] = null; } // clearing an optional field on edit
@@ -134,7 +137,7 @@ export function ResourcePage({ queryKey, endpoint, module, columns, fields, defa
                     : f.type === 'checkbox' ? <label className="flex items-center gap-2 text-sm"><input id={id} type="checkbox" className="size-4 accent-[var(--primary)]" {...reg} /> {f.hint ?? ''}</label>
                     : f.type === 'select' ? <OptionsSelect id={id} def={f} disabled={disabled} {...reg} />
                     : f.type === 'textarea' ? <Textarea id={id} {...reg} />
-                    : <Input id={id} type={f.type === 'number' ? 'number' : 'text'} step={f.step ?? (f.type === 'number' ? 'any' : undefined)} disabled={disabled} aria-invalid={!!err} {...reg} />}
+                    : <Input id={id} type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'} step={f.step ?? (f.type === 'number' ? 'any' : undefined)} disabled={disabled} aria-invalid={!!err} {...reg} />}
                 </Field>
               );
             })}

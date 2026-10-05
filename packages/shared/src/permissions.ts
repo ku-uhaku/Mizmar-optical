@@ -21,6 +21,7 @@ export const PERMISSION_CATALOG = {
   returns: ['read', 'create', 'approve'],
   payments: ['read', 'create', 'refund'],
   coupons: ['read', 'create', 'update', 'delete'],
+  shipping: ['read', 'create', 'update', 'delete'], // delivery methods and zones
   suppliers: ['read', 'create', 'update', 'delete'],
   purchasing: ['read', 'create', 'update', 'receive', 'approve'],
   workshop: ['read', 'create', 'update', 'assign', 'quality_check'],

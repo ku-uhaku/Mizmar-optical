@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Glasses, Trash2 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { tr, type ShopCard } from '@/lib/api';
+import { tr } from '@/lib/content';
+import type { ShopCard } from '@/lib/api';
 import { api } from '@/lib/client-api';
 import { useFormat } from '@/lib/format';
 

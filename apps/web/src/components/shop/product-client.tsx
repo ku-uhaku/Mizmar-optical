@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Check, Glasses, Minus, Plus, Store } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import type { LensOption, ShopProduct, ShopVariant } from '@/lib/api';
-import { tr } from '@/lib/api';
+import { tr } from '@/lib/content';
 import { cart } from '@/lib/cart';
 import { useFormat } from '@/lib/format';
 import { notify } from '@/components/toaster';

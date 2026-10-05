@@ -62,7 +62,10 @@
     "suppliers": "Fournisseurs",
     "purchasing": "Achats",
     "payables": "Factures fournisseurs",
-    "workshop": "Atelier"
+    "workshop": "Atelier",
+    "appointments": "Rendez-vous",
+    "promotions": "Promotions & livraison",
+    "inbox": "Avis & messages"
   },
   "auth": {
     "title": "Mizmar Optique",
@@ -875,7 +878,160 @@
       "FRAME_REQUIRED": "Décrivez la monture (ou choisissez-en une en stock).",
       "NOTHING_DUE": "Rien n’est dû sur cette facture.",
       "INVALID_TECHNICIAN": "Cette personne ne peut pas travailler dans ce magasin.",
-      "UNKNOWN_SUPPLIER": "Fournisseur inconnu ou inactif."
+      "UNKNOWN_SUPPLIER": "Fournisseur inconnu ou inactif.",
+      "SLOT_TAKEN": "Ce créneau vient d’être pris : choisissez-en un autre.",
+      "SLOT_UNAVAILABLE": "Ce créneau n’est pas disponible.",
+      "NO_PRACTITIONER": "Personne n’a encore d’horaires dans ce magasin.",
+      "UNKNOWN_PRACTITIONER": "Cette personne ne prend pas de rendez-vous ici.",
+      "INVALID_PRACTITIONER": "Cette personne ne travaille pas dans ce magasin.",
+      "INVALID_HOURS": "Une plage doit finir après son début.",
+      "OVERLAPPING_HOURS": "Deux plages du même jour se chevauchent.",
+      "INVALID_RANGE": "La fin doit être après le début.",
+      "RANGE_TOO_LARGE": "Choisissez une période plus courte.",
+      "INVALID_PAYMENT_METHOD": "Ce mode de paiement ne peut pas être utilisé ici."
+    }
+  },
+  "shopAdmin": {
+    "appointments": {
+      "title": "Rendez-vous"
+    },
+    "tabs": {
+      "calendar": "Calendrier",
+      "list": "Liste",
+      "types": "Prestations",
+      "schedules": "Horaires"
+    },
+    "newAppointment": "Nouveau rendez-vous",
+    "newAppointmentHint": "Pour un client ou un visiteur de passage, parmi les créneaux libres du magasin actif.",
+    "prev": "Semaine précédente",
+    "next": "Semaine suivante",
+    "today": "Aujourd’hui",
+    "practitioner": "Praticien",
+    "everyone": "Tout le monde",
+    "timeOff": "Absence",
+    "when": "Quand",
+    "visitor": "Visiteur",
+    "service": "Prestation",
+    "source": "Pris via",
+    "sources": {
+      "ONLINE": "Site web",
+      "STAFF": "En magasin",
+      "PHONE": "Téléphone"
+    },
+    "status": {
+      "PENDING": "En attente",
+      "CONFIRMED": "Confirmé",
+      "CHECKED_IN": "Arrivé",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé",
+      "NO_SHOW": "Absent"
+    },
+    "actions": {
+      "CONFIRMED": "Confirmer",
+      "CHECKED_IN": "Marquer arrivé",
+      "COMPLETED": "Terminer",
+      "CANCELLED": "Annuler",
+      "NO_SHOW": "Absent"
+    },
+    "confirmCancel": "Annuler ce rendez-vous ?",
+    "contact": "Contact",
+    "reason": "Motif",
+    "reschedule": "Déplacer au",
+    "saveChanges": "Enregistrer les modifications",
+    "searchCustomer": "Rechercher un client…",
+    "orWalkIn": "…ou saisir un visiteur de passage",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "date": "Date",
+    "time": "Heure",
+    "noSlots": "Aucun créneau libre ce jour pour cette prestation.",
+    "duration": "Durée (min)",
+    "buffer": "Pause après (min)",
+    "color": "Couleur",
+    "online": "En ligne",
+    "bookableOnline": "Les clients peuvent réserver en ligne",
+    "weeklyHours": "Horaires hebdomadaires",
+    "closed": "Fermé",
+    "addWindow": "Ajouter une plage",
+    "from": "De",
+    "to": "À",
+    "addTimeOff": "Ajouter une absence",
+    "timeOffConflicts": "Enregistré. {n} rendez-vous existant(s) tombent dans cette période : à reprogrammer.",
+    "noSchedule": "sans horaires",
+    "promotions": {
+      "title": "Promotions & livraison",
+      "coupons": "Codes promo",
+      "shipping": "Modes de livraison"
+    },
+    "coupons": {
+      "type": {
+        "PERCENT": "Pourcentage",
+        "FIXED": "Montant fixe",
+        "FREE_SHIPPING": "Livraison offerte"
+      },
+      "value": "Valeur",
+      "valueHint": "Pourcentage (0-100) ou montant",
+      "minSubtotal": "Panier minimum",
+      "maxDiscount": "Remise maximale",
+      "usageLimit": "Utilisations totales",
+      "perCustomerLimit": "Utilisations par client",
+      "startsAt": "Début",
+      "endsAt": "Fin",
+      "used": "Utilisé",
+      "validity": "Validité"
+    },
+    "shipping": {
+      "freeOver": "Gratuit dès",
+      "zones": "Villes desservies",
+      "zonesHint": "Séparées par des virgules ; vide = partout",
+      "everywhere": "Partout",
+      "daysMin": "Jours min",
+      "daysMax": "Jours max"
+    },
+    "inbox": {
+      "title": "Avis & messages",
+      "reviews": "Avis",
+      "messages": "Messages",
+      "product": "Produit",
+      "rating": "Note",
+      "review": "Avis",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "done": "Fait",
+      "status": "Statut",
+      "from": "De",
+      "message": "Message",
+      "reviewStatus": {
+        "PENDING": "En attente",
+        "APPROVED": "Approuvé",
+        "REJECTED": "Rejeté"
+      },
+      "messageStatus": {
+        "NEW": "Nouveau",
+        "READ": "Lu",
+        "REPLIED": "Répondu",
+        "SPAM": "Indésirable"
+      }
+    },
+    "onlineOrder": {
+      "title": "Commande en ligne",
+      "fulfillment": {
+        "PICKUP": "Retrait",
+        "DELIVERY": "Livraison",
+        "IN_STORE": "En magasin"
+      },
+      "confirmPayment": "Confirmer le paiement reçu",
+      "confirmPaymentHint": "Enregistrez un virement ou un chèque. Les espèces s’encaissent en caisse.",
+      "method": "Mode",
+      "reference": "Référence",
+      "ship": "Expédier",
+      "shipHint": "Remettez le colis au transporteur. Le client verra le numéro de suivi.",
+      "carrier": "Transporteur",
+      "tracking": "Numéro de suivi",
+      "delivered": "Marquer livrée",
+      "deliveredCollected": "Livrée, espèces encaissées",
+      "deliveredNoCash": "Livrée, non encaissée",
+      "readyForPickup": "Prête au retrait (prévenir le client)"
     }
   }
 }

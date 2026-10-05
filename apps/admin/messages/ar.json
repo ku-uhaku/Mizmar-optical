@@ -62,7 +62,10 @@
     "suppliers": "الموردون",
     "purchasing": "المشتريات",
     "payables": "فواتير الموردين",
-    "workshop": "الورشة"
+    "workshop": "الورشة",
+    "appointments": "المواعيد",
+    "promotions": "العروض والتوصيل",
+    "inbox": "الآراء والرسائل"
   },
   "auth": {
     "title": "مزمار للبصريات",
@@ -875,7 +878,160 @@
       "FRAME_REQUIRED": "صف الإطار (أو اختر واحدًا من المخزون).",
       "NOTHING_DUE": "لا يوجد مبلغ مستحق على هذه الفاتورة.",
       "INVALID_TECHNICIAN": "لا يمكن لهذا الشخص العمل في هذا المتجر.",
-      "UNKNOWN_SUPPLIER": "مورد غير معروف أو غير نشط."
+      "UNKNOWN_SUPPLIER": "مورد غير معروف أو غير نشط.",
+      "SLOT_TAKEN": "تم حجز هذا الوقت للتو: اختر وقتًا آخر.",
+      "SLOT_UNAVAILABLE": "هذا الوقت غير متاح.",
+      "NO_PRACTITIONER": "لا أحد لديه جدول في هذا المتجر بعد.",
+      "UNKNOWN_PRACTITIONER": "هذا الشخص لا يستقبل مواعيد هنا.",
+      "INVALID_PRACTITIONER": "هذا الشخص لا يعمل في هذا المتجر.",
+      "INVALID_HOURS": "يجب أن تنتهي الفترة بعد بدايتها.",
+      "OVERLAPPING_HOURS": "فترتان في اليوم نفسه تتداخلان.",
+      "INVALID_RANGE": "يجب أن تكون النهاية بعد البداية.",
+      "RANGE_TOO_LARGE": "اختر فترة أقصر.",
+      "INVALID_PAYMENT_METHOD": "لا يمكن استخدام وسيلة الدفع هذه هنا."
+    }
+  },
+  "shopAdmin": {
+    "appointments": {
+      "title": "المواعيد"
+    },
+    "tabs": {
+      "calendar": "التقويم",
+      "list": "القائمة",
+      "types": "الخدمات",
+      "schedules": "الجداول"
+    },
+    "newAppointment": "موعد جديد",
+    "newAppointmentHint": "لزبون أو زائر عابر، من الأوقات الحرة في المتجر النشط.",
+    "prev": "الأسبوع السابق",
+    "next": "الأسبوع التالي",
+    "today": "اليوم",
+    "practitioner": "الأخصائي",
+    "everyone": "الجميع",
+    "timeOff": "غياب",
+    "when": "متى",
+    "visitor": "الزائر",
+    "service": "الخدمة",
+    "source": "طريقة الحجز",
+    "sources": {
+      "ONLINE": "الموقع",
+      "STAFF": "في المتجر",
+      "PHONE": "الهاتف"
+    },
+    "status": {
+      "PENDING": "قيد الانتظار",
+      "CONFIRMED": "مؤكد",
+      "CHECKED_IN": "تم الحضور",
+      "COMPLETED": "مكتمل",
+      "CANCELLED": "ملغى",
+      "NO_SHOW": "لم يحضر"
+    },
+    "actions": {
+      "CONFIRMED": "تأكيد",
+      "CHECKED_IN": "تسجيل الحضور",
+      "COMPLETED": "إنهاء",
+      "CANCELLED": "إلغاء",
+      "NO_SHOW": "لم يحضر"
+    },
+    "confirmCancel": "إلغاء هذا الموعد؟",
+    "contact": "الاتصال",
+    "reason": "السبب",
+    "reschedule": "نقل إلى",
+    "saveChanges": "حفظ التعديلات",
+    "searchCustomer": "ابحث عن زبون…",
+    "orWalkIn": "…أو أدخل بيانات زائر عابر",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "noSlots": "لا توجد أوقات حرة في هذا اليوم لهذه الخدمة.",
+    "duration": "المدة (دقيقة)",
+    "buffer": "فاصل بعد الموعد (دقيقة)",
+    "color": "اللون",
+    "online": "عبر الإنترنت",
+    "bookableOnline": "يمكن للزبناء حجزها عبر الإنترنت",
+    "weeklyHours": "الساعات الأسبوعية",
+    "closed": "مغلق",
+    "addWindow": "إضافة فترة",
+    "from": "من",
+    "to": "إلى",
+    "addTimeOff": "إضافة غياب",
+    "timeOffConflicts": "تم الحفظ. {n} موعد (مواعيد) قائمة ضمن هذه الفترة: أعد جدولتها.",
+    "noSchedule": "بلا جدول",
+    "promotions": {
+      "title": "العروض والتوصيل",
+      "coupons": "القسائم",
+      "shipping": "طرق التوصيل"
+    },
+    "coupons": {
+      "type": {
+        "PERCENT": "نسبة مئوية",
+        "FIXED": "مبلغ ثابت",
+        "FREE_SHIPPING": "توصيل مجاني"
+      },
+      "value": "القيمة",
+      "valueHint": "نسبة (0-100) أو مبلغ",
+      "minSubtotal": "الحد الأدنى للسلة",
+      "maxDiscount": "أقصى تخفيض",
+      "usageLimit": "عدد الاستخدامات",
+      "perCustomerLimit": "الاستخدامات لكل زبون",
+      "startsAt": "يبدأ في",
+      "endsAt": "ينتهي في",
+      "used": "المستخدم",
+      "validity": "الصلاحية"
+    },
+    "shipping": {
+      "freeOver": "مجاني ابتداءً من",
+      "zones": "المدن المخدومة",
+      "zonesHint": "مفصولة بفواصل؛ فارغ = كل المدن",
+      "everywhere": "كل المدن",
+      "daysMin": "أقل عدد أيام",
+      "daysMax": "أقصى عدد أيام"
+    },
+    "inbox": {
+      "title": "الآراء والرسائل",
+      "reviews": "الآراء",
+      "messages": "الرسائل",
+      "product": "المنتج",
+      "rating": "التقييم",
+      "review": "الرأي",
+      "approve": "موافقة",
+      "reject": "رفض",
+      "done": "تم",
+      "status": "الحالة",
+      "from": "من",
+      "message": "الرسالة",
+      "reviewStatus": {
+        "PENDING": "قيد الانتظار",
+        "APPROVED": "موافق عليه",
+        "REJECTED": "مرفوض"
+      },
+      "messageStatus": {
+        "NEW": "جديد",
+        "READ": "مقروء",
+        "REPLIED": "تم الرد",
+        "SPAM": "غير مرغوب"
+      }
+    },
+    "onlineOrder": {
+      "title": "طلب عبر الإنترنت",
+      "fulfillment": {
+        "PICKUP": "استلام",
+        "DELIVERY": "توصيل",
+        "IN_STORE": "في المتجر"
+      },
+      "confirmPayment": "تأكيد استلام الدفعة",
+      "confirmPaymentHint": "سجّل تحويلًا بنكيًا أو شيكًا. النقد يُقبض في الصندوق.",
+      "method": "الطريقة",
+      "reference": "المرجع",
+      "ship": "شحن الطلب",
+      "shipHint": "سلّم الطرد لشركة النقل. سيرى الزبون رقم التتبع.",
+      "carrier": "شركة النقل",
+      "tracking": "رقم التتبع",
+      "delivered": "تحديد كمسلّم",
+      "deliveredCollected": "تم التسليم وقبض النقد",
+      "deliveredNoCash": "تم التسليم دون قبض",
+      "readyForPickup": "جاهز للاستلام (إشعار الزبون)"
     }
   }
 }
