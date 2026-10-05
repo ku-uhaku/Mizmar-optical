@@ -25,7 +25,7 @@ export function Topbar() {
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Menu"><Menu /></Button>
         <div className="ms-auto flex items-center gap-2">
           {user && user.stores.length > 0 && (
-            <NativeSelect aria-label={t('store')} className="w-44 sm:w-64" value={storeId ?? ''} onChange={(e) => setStoreId(e.target.value)}>
+            <NativeSelect aria-label={t('store')} className="w-32 sm:w-52 lg:w-64" value={storeId ?? ''} onChange={(e) => setStoreId(e.target.value)}>
               {user.stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </NativeSelect>
           )}

@@ -2,14 +2,18 @@ import 'server-only';
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
-/** Server-side fetch of public storefront data, cached 30 s (ISR) so the API isn't hit per request. */
+/**
+ * Server-side fetch of public storefront data, cached 30 s in Next's data cache.
+ *
+ * - 404 -> `null` (caller decides: notFound() or a default).
+ * - Network error / 5xx -> THROWS. Swallowing it into an empty render would let one API blip bake a blank page into
+ *   the cache; throwing lets Next keep serving the last good (stale) data and show the error page only on a cold cache.
+ */
 export async function publicApi<T>(path: string, revalidate = 30): Promise<T | null> {
-  try {
-    const res = await fetch(`${API_URL}/public${path}`, { next: { revalidate } });
-    return res.ok ? ((await res.json()) as T) : null;
-  } catch {
-    return null; // API unreachable (e.g. during build): callers fall back to defaults
-  }
+  const res = await fetch(`${API_URL}/public${path}`, { next: { revalidate } });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Storefront API ${path} responded ${res.status}`);
+  return (await res.json()) as T;
 }
 
 export interface Branding {

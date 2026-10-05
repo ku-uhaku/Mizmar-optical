@@ -11,7 +11,7 @@ export async function Footer({ branding, pages, stores }: { branding: Branding; 
         <div>
           <p className="text-lg font-semibold">{branding.storeName}</p>
           {branding.tagline && <p className="mt-1 text-sm text-muted-foreground">{branding.tagline}</p>}
-          {branding.contact?.phone && <p className="mt-3 text-sm">{branding.contact.phone}</p>}
+          {branding.contact?.phone && <p className="mt-3 text-sm" dir="ltr" style={{ textAlign: 'start' }}>{branding.contact.phone}</p>}
           {branding.contact?.email && <p className="text-sm">{branding.contact.email}</p>}
         </div>
         <div>
@@ -24,7 +24,7 @@ export async function Footer({ branding, pages, stores }: { branding: Branding; 
         <div className="lg:col-span-2">
           <p className="mb-2 font-medium">{t('ourStores')}</p>
           <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            {stores.map((s) => <li key={s.id}><span className="font-medium text-foreground">{s.name}</span><br />{[s.address, s.city].filter(Boolean).join(', ')}<br />{s.phone}</li>)}
+            {stores.map((s) => <li key={s.id}><span className="font-medium text-foreground">{s.name}</span><br />{[s.address, s.city].filter(Boolean).join(', ')}<br /><bdi>{s.phone}</bdi></li>)}
           </ul>
         </div>
       </div>

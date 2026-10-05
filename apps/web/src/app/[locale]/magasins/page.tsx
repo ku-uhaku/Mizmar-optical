@@ -22,7 +22,7 @@ export default async function StoresPage({ params }: { params: Promise<{ locale:
           <section key={s.id} className="space-y-2 rounded-lg border bg-card p-5">
             <h2 className="text-lg font-semibold">{s.name}</h2>
             <p className="flex gap-2 text-sm"><MapPin className="size-4 shrink-0" />{[s.address, s.city].filter(Boolean).join(', ')}</p>
-            {s.phone && <p className="flex gap-2 text-sm"><Phone className="size-4 shrink-0" /><a href={`tel:${s.phone}`}>{s.phone}</a></p>}
+            {s.phone && <p className="flex gap-2 text-sm"><Phone className="size-4 shrink-0" /><a href={`tel:${s.phone}`}><bdi>{s.phone}</bdi></a></p>}
             {s.openingHours && <ul className="pt-2 text-sm text-muted-foreground">{DAYS.filter((d) => s.openingHours![d]).map((d) => <li key={d} className="flex justify-between"><span>{t(`days.${d}`)}</span><span>{s.openingHours![d].map((h) => `${h.open}–${h.close}`).join(', ')}</span></li>)}</ul>}
           </section>
         ))}

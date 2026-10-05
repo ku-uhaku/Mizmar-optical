@@ -42,7 +42,7 @@ export async function HomeSections({ sections, currency }: { sections: HomeSecti
           case 'TESTIMONIALS':
             return <Wrap key={s.id}><Heading title={title} /><div className="grid gap-4 md:grid-cols-3">{s.data.map((x: any) => <figure key={x.id} className="rounded-lg border bg-card p-5"><div className="mb-2 flex gap-0.5 text-amber-500" aria-label={`${x.rating}/5`}>{Array.from({ length: x.rating }).map((_, i) => <Star key={i} className="size-4 fill-current" />)}</div><blockquote className="text-sm">{tr(x, 'content', locale)}</blockquote><figcaption className="mt-3 text-sm font-medium">{x.authorName}</figcaption></figure>)}</div></Wrap>;
           case 'STORES':
-            return <Wrap key={s.id}><Heading title={title} /><div className="grid gap-4 md:grid-cols-2">{(s.data as Store[]).map((st) => <div key={st.id} className="rounded-lg border bg-card p-5"><p className="font-semibold">{st.name}</p><p className="text-sm text-muted-foreground">{[st.address, st.city].filter(Boolean).join(', ')}</p><p className="mt-1 text-sm">{st.phone}</p></div>)}</div></Wrap>;
+            return <Wrap key={s.id}><Heading title={title} /><div className="grid gap-4 md:grid-cols-2">{(s.data as Store[]).map((st) => <div key={st.id} className="rounded-lg border bg-card p-5"><p className="font-semibold">{st.name}</p><p className="text-sm text-muted-foreground">{[st.address, st.city].filter(Boolean).join(', ')}</p><p className="mt-1 text-sm"><bdi>{st.phone}</bdi></p></div>)}</div></Wrap>;
           default:
             return null; // e.g. NEWSLETTER lands with the storefront commerce phase
         }

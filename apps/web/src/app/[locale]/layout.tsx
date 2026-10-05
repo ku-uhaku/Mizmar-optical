@@ -11,7 +11,9 @@ import { Footer } from '@/components/layout/footer';
 import { Header } from '@/components/layout/header';
 import '../globals.css';
 
-export const revalidate = 30;
+// Rendered per request; data freshness comes from the fetch cache (30 s, stale-while-revalidate), and nothing is
+// baked at build time, so an API outage can never freeze an empty page into the cache.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const b = (await publicApi<Branding>('/branding')) ?? FALLBACK_BRANDING;
@@ -21,10 +23,6 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: b.faviconUrl ? { icon: b.faviconUrl } : undefined,
     openGraph: { siteName: b.storeName, type: 'website' },
   };
-}
-
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
 }
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
