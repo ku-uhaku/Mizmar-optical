@@ -90,7 +90,7 @@ export default function CustomersPage() {
           {can('customers:export') && <Button variant="outline" onClick={() => apiDownload('/customers/export.csv', 'customers.csv').catch((e) => toast.error(e.message))}><Download /> {t('export')}</Button>}
           {can('customers:create') && <CreateCustomer />}
         </>} />
-        <NativeSelect className="w-60" aria-label={t('gender')} value={gender} onChange={(e) => setGender(e.target.value)}><option value="">{t('gender')}: {c('all')}</option>{CUSTOMER_GENDERS.map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect>
+        <NativeSelect className="w-44" aria-label={t('gender')} value={gender} onChange={(e) => setGender(e.target.value)}><option value="">{t('gender')}: {c('all')}</option>{CUSTOMER_GENDERS.map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect>
         <DataTable<Row> queryKey="customers" endpoint="/customers" columns={columns} extraQuery={{ gender: gender || undefined }} />
       </div>
     </RequirePermission>

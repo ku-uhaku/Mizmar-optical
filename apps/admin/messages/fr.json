@@ -332,13 +332,7 @@
     "confirmDelete": "Supprimer {name} ?",
     "genders": {
       "MALE": "Homme",
-      "FEMALE": "Femme",
-      "NON_BINARY": "Non-binaire",
-      "TRANS_MAN": "Homme trans",
-      "TRANS_WOMAN": "Femme trans",
-      "GENDERQUEER": "Genderqueer",
-      "OTHER": "Autre",
-      "PREFER_NOT_TO_SAY": "Préfère ne pas préciser"
+      "FEMALE": "Femme"
     },
     "tabs": {
       "overview": "Aperçu",

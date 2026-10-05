@@ -29,18 +29,17 @@ describe('Customers & prescriptions (e2e)', () => {
       await admin.post('/customers', { firstName: 'X', lastName: 'Y', code: 'HACK-1' }).expect(400);
     });
 
-    it('gender is an inclusive, optional, self-identified list; product-audience values are not accepted', async () => {
+    it('gender is optional and limited to MALE / FEMALE', async () => {
       for (const g of CUSTOMER_GENDERS) expect((await newCustomer({ gender: g })).gender).toBe(g);
-      expect(CUSTOMER_GENDERS).toHaveLength(8);
-      for (const bad of ['UNISEX', 'KIDS', 'MEN', 'WOMEN', 'robot']) await admin.post('/customers', { firstName: 'a', lastName: 'b', gender: bad }).expect(400);
+      expect(CUSTOMER_GENDERS).toEqual(['MALE', 'FEMALE']);
+      for (const bad of ['UNISEX', 'KIDS', 'MEN', 'WOMEN', 'NON_BINARY', 'robot']) await admin.post('/customers', { firstName: 'a', lastName: 'b', gender: bad }).expect(400);
       const none = await newCustomer();
       expect(none.gender).toBeNull(); // never required
-      const nb = await newCustomer({ gender: 'NON_BINARY' });
-      expect((await admin.get(`/customers?search=${nb.lastName}&gender=NON_BINARY`)).body.data.map((c: any) => c.id)).toEqual([nb.id]);
-      expect((await admin.get(`/customers?search=${nb.lastName}&gender=FEMALE`)).body.data).toHaveLength(0);
+      const f = await newCustomer({ gender: 'FEMALE' });
+      expect((await admin.get(`/customers?search=${f.lastName}&gender=FEMALE`)).body.data.map((c: any) => c.id)).toEqual([f.id]);
+      expect((await admin.get(`/customers?search=${f.lastName}&gender=MALE`)).body.data).toHaveLength(0);
       await admin.get('/customers?gender=UNISEX').expect(400);
-      expect((await admin.patch(`/customers/${nb.id}`, { gender: null }).expect(200)).body.gender).toBeNull(); // can be cleared
-      expect((await admin.patch(`/customers/${nb.id}`, { gender: 'PREFER_NOT_TO_SAY' }).expect(200)).body.gender).toBe('PREFER_NOT_TO_SAY');
+      expect((await admin.patch(`/customers/${f.id}`, { gender: null }).expect(200)).body.gender).toBeNull(); // can be cleared
     });
 
     it('customer codes are unique under concurrency', async () => {
@@ -121,9 +120,9 @@ describe('Customers & prescriptions (e2e)', () => {
       expect(got.notes).toBe('Prefers morning appointments'); // the text column survives
       expect(got.noteItems.map((n: any) => n.body)).toEqual(['Called back on Monday']);
       // what the edit form does: send back the editable fields it received
-      const edit = { firstName: got.firstName, lastName: got.lastName, phone: got.phone, email: got.email, gender: 'GENDERQUEER', notes: got.notes, marketingOptIn: got.marketingOptIn };
+      const edit = { firstName: got.firstName, lastName: got.lastName, phone: got.phone, email: got.email, gender: 'FEMALE', notes: got.notes, marketingOptIn: got.marketingOptIn };
       const saved = (await admin.patch(`/customers/${c.id}`, edit).expect(200)).body;
-      expect(saved).toMatchObject({ gender: 'GENDERQUEER', notes: 'Prefers morning appointments' });
+      expect(saved).toMatchObject({ gender: 'FEMALE', notes: 'Prefers morning appointments' });
       await admin.patch(`/customers/${c.id}`, { notes: ['not', 'text'] }).expect(400);
     });
 
