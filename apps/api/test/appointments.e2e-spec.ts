@@ -28,12 +28,17 @@ describe('Appointments (e2e)', () => {
   beforeAll(async () => {
     app = await createTestApp(); f = await setupSales(app); prisma = app.get(PrismaService);
     opt = await loginAs(app, 'optician');
-    casa = f.cashier.user.stores[0].id;
-    examId = (await prisma.raw.appointmentType.findFirstOrThrow({ where: { bookableOnline: true, isActive: true } })).id;
+    // the Casablanca store by code (earlier suites may leave other stores around), publicly visible and open
+    const store = await prisma.raw.store.findFirstOrThrow({ where: { code: 'CASA' } });
+    await prisma.raw.store.update({ where: { id: store.id }, data: { isActive: true, showOnLocator: true } });
+    casa = store.id;
+    examId = (await prisma.raw.appointmentType.findFirstOrThrow({ where: { code: 'eye_exam' } })).id;
+    await prisma.raw.appointmentType.update({ where: { id: examId }, data: { isActive: true, deletedAt: null } });
     opticianId = (await prisma.raw.user.findUniqueOrThrow({ where: { email: 'optician@mizmar.local' } })).id;
     // a clean, predictable week for the optician: every day 09:00-12:00, no old bookings or time off
     await prisma.raw.appointment.updateMany({ where: { storeId: casa, status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] } }, data: { status: 'CANCELLED' } });
     await prisma.raw.practitionerTimeOff.deleteMany({ where: { practitionerId: opticianId } });
+    await prisma.raw.practitionerAvailability.updateMany({ where: { storeId: casa, practitionerId: { not: opticianId }, deletedAt: null }, data: { deletedAt: new Date(), isActive: false } }); // only the optician takes appointments, whatever earlier runs left behind
     await f.admin.put(`/practitioners/${opticianId}/availability`, { storeId: casa, rules: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ weekday, startTime: '09:00', endTime: '12:00' })) }).expect(200);
     await prisma.raw.appointmentType.update({ where: { id: examId }, data: { durationMin: 30, bufferMin: 0, bookableOnline: true } });
   });
