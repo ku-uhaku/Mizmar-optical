@@ -65,7 +65,10 @@
     "workshop": "Workshop",
     "appointments": "Appointments",
     "promotions": "Promotions & delivery",
-    "inbox": "Reviews & messages"
+    "inbox": "Reviews & messages",
+    "hr": "Human resources",
+    "finance": "Finance",
+    "reports": "Reports"
   },
   "auth": {
     "title": "Mizmar Optique",
@@ -84,7 +87,32 @@
     "roles": "Your roles",
     "stores": "Your stores",
     "permissions": "Permissions",
-    "superAdmin": "Full access (super admin)"
+    "superAdmin": "Full access (super admin)",
+    "salesToday": "Sales today",
+    "salesWeek": "Sales this week",
+    "salesMonth": "Sales this month",
+    "basket": "Average basket",
+    "orders": "{n} orders",
+    "thisMonth": "this month",
+    "last30": "Sales, last 30 days",
+    "topProducts": "Top products",
+    "attention": "Needs attention",
+    "lowStock": "Low stock items",
+    "lateJobs": "Late workshop jobs",
+    "openJobs": "Open workshop jobs",
+    "appointmentsToday": "Appointments today",
+    "onlineToProcess": "Online orders to process",
+    "unpaidSupplierInvoices": "Unpaid supplier invoices",
+    "pendingLeave": "Leave requests",
+    "newCustomers": "New customers this month",
+    "noReports": "Your role has no reports access.",
+    "attendance": "Attendance",
+    "in": "In",
+    "out": "out",
+    "notClockedIn": "Not clocked in yet",
+    "clockIn": "Clock in",
+    "clockOut": "Clock out",
+    "clocked": "Recorded"
   },
   "users": {
     "title": "Users",
@@ -888,7 +916,29 @@
       "OVERLAPPING_HOURS": "Two windows on the same day overlap.",
       "INVALID_RANGE": "The end must be after the start.",
       "RANGE_TOO_LARGE": "Choose a shorter period.",
-      "INVALID_PAYMENT_METHOD": "This payment method cannot be used here."
+      "INVALID_PAYMENT_METHOD": "This payment method cannot be used here.",
+      "USER_ALREADY_LINKED": "That login already belongs to another employee.",
+      "DUPLICATE_NUMBER": "That employee number is taken.",
+      "END_DATE_REQUIRED": "A fixed-term contract needs an end date.",
+      "HAS_PAYSLIPS": "This employee has payslips: terminate them instead.",
+      "ALREADY_CLOCKED_IN": "You already clocked in today.",
+      "ALREADY_CLOCKED_OUT": "You already clocked out today.",
+      "NOT_CLOCKED_IN": "Clock in first.",
+      "NO_EMPLOYEE": "Your login is not linked to an employee record.",
+      "INVALID_TIMES": "Check-out must be after check-in.",
+      "LEAVE_OVERLAP": "This overlaps another leave request.",
+      "INSUFFICIENT_BALANCE": "Not enough leave days left ({remaining} left, {requested} asked).",
+      "NO_WORKING_DAYS": "That period has no working days.",
+      "SELF_APPROVAL": "You cannot decide your own leave request.",
+      "UNKNOWN_LEAVE_TYPE": "Unknown leave type.",
+      "RUN_EXISTS": "A payroll already exists for this period.",
+      "RUN_LOCKED": "Only a draft payroll can be changed.",
+      "NO_EMPLOYEES": "No employee has a contract covering this period.",
+      "ALREADY_PAID": "This commission is already on a payslip.",
+      "INVALID_TAX": "VAT cannot exceed the total.",
+      "UNKNOWN_CATEGORY": "Unknown expense category.",
+      "UNKNOWN_ACCOUNT": "Unknown account.",
+      "NOT_MANUAL": "Only manual entries can be deleted."
     }
   },
   "shopAdmin": {
@@ -1032,6 +1082,285 @@
       "deliveredCollected": "Delivered, cash collected",
       "deliveredNoCash": "Delivered, not paid yet",
       "readyForPickup": "Ready for pickup (notify customer)"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "report": "Report",
+    "from": "From",
+    "to": "To",
+    "groupBy": "Group by",
+    "allStores": "All my stores",
+    "pdf": "PDF / Print",
+    "empty": "No data for this period.",
+    "total": "Total",
+    "note": "Revenue includes VAT after discounts and refunds; margin uses each item’s recorded cost (lens-lab costs are not included).",
+    "names": {
+      "sales": "Sales",
+      "best-sellers": "Best sellers",
+      "stock-value": "Stock value",
+      "profit": "Profitability",
+      "top-customers": "Top customers"
+    },
+    "groups": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "store": "Store",
+      "employee": "Salesperson",
+      "category": "Category",
+      "brand": "Brand",
+      "product": "Product",
+      "type": "Product type",
+      "channel": "Channel"
+    }
+  },
+  "finance": {
+    "title": "Finance",
+    "all": "All",
+    "from": "From",
+    "to": "To",
+    "tabs": {
+      "overview": "Overview",
+      "expenses": "Expenses",
+      "cash": "Cash flow",
+      "vat": "VAT",
+      "payments": "Payments",
+      "setup": "Setup"
+    },
+    "ov": {
+      "cashIn": "Cash in",
+      "cashOut": "Cash out",
+      "net": "Net cash",
+      "vatDue": "VAT due",
+      "receivables": "Owed by customers",
+      "orders": "{n} orders",
+      "payables": "Owed to suppliers",
+      "invoices": "{n} invoices",
+      "overdue": "Overdue to suppliers",
+      "expenses": "Expenses",
+      "thisMonth": "this month",
+      "inVsOut": "Net cash per day, this month",
+      "accounts": "Accounts"
+    },
+    "exp": {
+      "new": "New expense",
+      "hint": "Record what was spent; an accountant approves it, then pays it.",
+      "category": "Category",
+      "description": "Description",
+      "amount": "Amount",
+      "amountIncl": "Total incl. VAT",
+      "vat": "Of which VAT",
+      "date": "Date",
+      "number": "No.",
+      "status": "Status",
+      "approve": "Approve",
+      "reject": "Reject",
+      "pay": "Mark paid",
+      "done": "Done",
+      "statuses": {
+        "DRAFT": "Draft",
+        "APPROVED": "Approved",
+        "PAID": "Paid",
+        "REJECTED": "Rejected"
+      }
+    },
+    "cf": {
+      "in": "In",
+      "out": "Out",
+      "byDay": "By day",
+      "bySource": "By source",
+      "addEntry": "Add entry",
+      "sources": {
+        "SALES": "Sales",
+        "REFUNDS": "Refunds",
+        "SUPPLIERS": "Supplier payments",
+        "EXPENSE": "Expenses",
+        "PAYROLL": "Payroll",
+        "MANUAL": "Manual entries"
+      }
+    },
+    "vat": {
+      "title": "VAT",
+      "collected": "VAT collected",
+      "deductible": "VAT deductible",
+      "due": "VAT due",
+      "byRate": "Sales by VAT rate",
+      "rate": "Rate",
+      "base": "Taxable base",
+      "creditNotes": "Credit notes",
+      "supplierInvoices": "Supplier invoices",
+      "expenses": "Expenses",
+      "note": "Indicative figures: confirm them with your accountant before filing."
+    },
+    "pay": {
+      "date": "Date",
+      "method": "Method",
+      "order": "Order",
+      "customer": "Customer",
+      "kind": "Kind",
+      "amount": "Amount",
+      "count": "{n} payments",
+      "kinds": {
+        "PAYMENT": "Payment",
+        "DEPOSIT": "Deposit",
+        "REFUND": "Refund"
+      }
+    },
+    "setup": {
+      "categories": "Expense categories",
+      "accounts": "Accounts",
+      "bank": "Bank",
+      "opening": "Opening balance",
+      "cashAccount": "Cash account",
+      "cashAccountHint": "A drawer or petty cash, not a bank"
+    }
+  },
+  "hr": {
+    "title": "Human resources",
+    "all": "All",
+    "name": "Name",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "number": "No.",
+    "phone": "Phone",
+    "position": "Position",
+    "department": "Department",
+    "hireDate": "Hire date",
+    "cnss": "CNSS number",
+    "employee": "Employee",
+    "period": "Period",
+    "startDate": "Start",
+    "endDate": "End",
+    "grossSalary": "Gross monthly salary",
+    "newEmployee": "New employee",
+    "numberGenerated": "Number generated on save",
+    "login": "Dashboard login",
+    "loginHint": "Link a login so this person can clock in and request leave",
+    "contracts": "Contracts",
+    "current": "Current",
+    "addContract": "Add contract (ends the previous one)",
+    "terminate": "Terminate employment",
+    "confirmTerminate": "Terminate this employee? Their contracts will end.",
+    "tabs": {
+      "employees": "Employees",
+      "attendance": "Attendance",
+      "leave": "Leave",
+      "commissions": "Commissions",
+      "payroll": "Payroll",
+      "settings": "Settings"
+    },
+    "status": {
+      "label": "Status",
+      "ACTIVE": "Active",
+      "ON_LEAVE": "On leave",
+      "TERMINATED": "Left"
+    },
+    "att": {
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent",
+      "leave": "Leave",
+      "worked": "Hours worked",
+      "in": "In",
+      "out": "Out",
+      "record": "Record",
+      "status": {
+        "PRESENT": "Present",
+        "LATE": "Late",
+        "ABSENT": "Absent",
+        "LEAVE": "Leave",
+        "HOLIDAY": "Holiday"
+      }
+    },
+    "leave": {
+      "request": "Request leave",
+      "requestHint": "Working days are counted for you (Sundays are not).",
+      "type": "Leave type",
+      "left": "{n} d left",
+      "period": "Period",
+      "days": "Days",
+      "reason": "Reason",
+      "unpaid": "unpaid",
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Cancel",
+      "confirmCancel": "Cancel this leave?",
+      "done": "Done",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "CANCELLED": "Cancelled"
+      }
+    },
+    "comm": {
+      "calculate": "Calculate",
+      "approveAll": "Approve the month",
+      "calculated": "{n} commissions calculated ({total})",
+      "approved": "{n} approved",
+      "hint": "Commission is worked out on each salesperson’s till sales for the month, net of returns, using the active rules. Recalculating rebuilds what is not yet approved.",
+      "rule": "Rule",
+      "base": "Sales base",
+      "amount": "Commission",
+      "void": "Void",
+      "rate": "Rate",
+      "value": "Value",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "PAID": "Paid",
+        "VOID": "Void"
+      }
+    },
+    "pay": {
+      "newRun": "New payroll run",
+      "created": "Payroll draft created",
+      "payslips": "Payslips",
+      "gross": "Gross",
+      "net": "Net",
+      "amount": "Amount",
+      "run": "Payroll",
+      "disclaimer": "Basic payroll: CNSS, AMO and income tax follow a simplified scheme with editable rates (setting payroll_config). Have an accountant validate it before paying real salaries.",
+      "approve": "Approve",
+      "confirmApprove": "Approve this payroll? It can no longer be edited.",
+      "confirmDelete": "Delete this draft?",
+      "markPaid": "Mark paid",
+      "confirmPay": "Mark all salaries as paid and record the cash out?",
+      "account": "Account",
+      "noAccount": "No account",
+      "adjust": "Add bonus / deduction",
+      "print": "Payslip",
+      "kinds": {
+        "BONUS": "Bonus",
+        "DEDUCTION": "Deduction"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "APPROVED": "Approved",
+        "PAID": "Paid"
+      }
+    },
+    "set": {
+      "leaveTypes": "Leave types",
+      "rules": "Commission rules",
+      "paid": "Paid leave",
+      "allowance": "Days per year",
+      "allowanceHint": "Empty = unlimited",
+      "approval": "Needs approval",
+      "scope": "Applies to",
+      "productTypeHint": "Used when “Applies to” is a product type",
+      "minSale": "Minimum sale",
+      "scopes": {
+        "ALL": "All sales",
+        "CATEGORY": "Category",
+        "BRAND": "Brand",
+        "PRODUCT_TYPE": "Product type"
+      },
+      "rateTypes": {
+        "PERCENT": "Percent",
+        "FIXED": "Per unit"
+      }
     }
   }
 }

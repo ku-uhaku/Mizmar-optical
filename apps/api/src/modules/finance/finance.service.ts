@@ -8,7 +8,6 @@ import { NumberingService } from '../numbering/numbering.service';
 import * as D from './finance.dto';
 
 const day = (s: string) => new Date(`${s}T00:00:00Z`);
-const endOfDay = (s: string) => new Date(`${s}T23:59:59.999Z`);
 
 @Injectable()
 export class FinanceService {

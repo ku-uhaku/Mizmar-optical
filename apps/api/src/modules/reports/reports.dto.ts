@@ -13,11 +13,12 @@ export class ReportQueryDto {
   @ApiPropertyOptional({ enum: GROUPS }) @IsOptional() @IsIn(GROUPS) groupBy?: Group;
   @ApiPropertyOptional({ enum: ['units', 'revenue'] }) @IsOptional() @IsIn(['units', 'revenue']) by?: 'units' | 'revenue';
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(200) limit?: number;
+  @ApiPropertyOptional({ enum: ['fr', 'en', 'ar'] }) @IsOptional() @IsIn(['fr', 'en', 'ar']) locale?: 'fr' | 'en' | 'ar';
 }
 export class ExportQueryDto extends ReportQueryDto {
   @ApiPropertyOptional({ enum: ['xlsx', 'csv', 'html'], description: 'html opens a print-ready page (Print → Save as PDF)' }) @IsOptional() @IsIn(['xlsx', 'csv', 'html']) format?: 'xlsx' | 'csv' | 'html';
-  @ApiPropertyOptional({ enum: ['fr', 'en', 'ar'] }) @IsOptional() @IsIn(['fr', 'en', 'ar']) locale?: 'fr' | 'en' | 'ar';
 }
 export class StockQueryDto {
   @ApiPropertyOptional() @IsOptional() @IsString() storeId?: string;
+  @ApiPropertyOptional({ enum: ['fr', 'en', 'ar'] }) @IsOptional() @IsIn(['fr', 'en', 'ar']) locale?: 'fr' | 'en' | 'ar';
 }

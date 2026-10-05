@@ -14,7 +14,7 @@ export function toCsv(t: ReportTable): string {
   };
   const lines = [t.columns.map((c) => cell(c.label)).join(','), ...t.rows.map((r) => t.columns.map((c) => cell(r[c.key])).join(','))];
   if (t.totals) lines.push(t.columns.map((c) => cell(t.totals![c.key])).join(','));
-  return `﻿${lines.join('\r\n')}\r\n`;
+  return `\uFEFF${lines.join('\r\n')}\r\n`;
 }
 
 export async function toXlsx(t: ReportTable, totalLabel: string): Promise<Buffer> {

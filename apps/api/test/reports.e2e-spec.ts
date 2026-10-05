@@ -86,7 +86,7 @@ describe('Reports and exports (e2e)', () => {
     expect(res.headers['content-type']).toContain('spreadsheetml');
     expect(res.headers['content-disposition']).toContain('.xlsx');
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(res.body as Buffer);
+    await wb.xlsx.load(res.body as unknown as ArrayBuffer);
     const ws = wb.worksheets[0];
     const header = ws.getRow(3).values as unknown[];
     expect(header).toContain('Revenue (incl. VAT)');

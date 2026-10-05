@@ -16,11 +16,11 @@ export class ReportsController {
   constructor(private readonly svc: ReportsService, private readonly prisma: PrismaService) {}
 
   @Get('dashboard') @Permissions('reports:read') dashboard(@Query('storeId') storeId: string | undefined, @CurrentUser() u: AuthUser) { return this.svc.dashboard(u, storeId); }
-  @Get('sales') @Permissions('reports:read') sales(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.sales(q, u); }
-  @Get('best-sellers') @Permissions('reports:read') best(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.bestSellers(q, u); }
-  @Get('stock-value') @Permissions('reports:read') stock(@Query() q: D.StockQueryDto, @CurrentUser() u: AuthUser) { return this.svc.stockValue(q, u); }
-  @Get('profit') @Permissions('reports:read') profit(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.profit(q, u); }
-  @Get('top-customers') @Permissions('reports:read') customers(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.topCustomers(q, u); }
+  @Get('sales') @Permissions('reports:read') sales(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.sales(q, u, q.locale); }
+  @Get('best-sellers') @Permissions('reports:read') best(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.bestSellers(q, u, q.locale); }
+  @Get('stock-value') @Permissions('reports:read') stock(@Query() q: D.StockQueryDto, @CurrentUser() u: AuthUser) { return this.svc.stockValue(q, u, q.locale); }
+  @Get('profit') @Permissions('reports:read') profit(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.profit(q, u, q.locale); }
+  @Get('top-customers') @Permissions('reports:read') customers(@Query() q: D.ReportQueryDto, @CurrentUser() u: AuthUser) { return this.svc.topCustomers(q, u, q.locale); }
 
   /** Excel (.xlsx), CSV, or a print-ready page (open it and "Print → Save as PDF"). The same query as the JSON report. */
   @Get('export/:name') @Permissions('reports:export') @Header('Cache-Control', 'no-store')

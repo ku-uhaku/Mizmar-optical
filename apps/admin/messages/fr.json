@@ -65,7 +65,10 @@
     "workshop": "Atelier",
     "appointments": "Rendez-vous",
     "promotions": "Promotions & livraison",
-    "inbox": "Avis & messages"
+    "inbox": "Avis & messages",
+    "hr": "Ressources humaines",
+    "finance": "Finance",
+    "reports": "Rapports"
   },
   "auth": {
     "title": "Mizmar Optique",
@@ -84,7 +87,32 @@
     "roles": "Vos rôles",
     "stores": "Vos magasins",
     "permissions": "Permissions",
-    "superAdmin": "Accès complet (super admin)"
+    "superAdmin": "Accès complet (super admin)",
+    "salesToday": "Ventes du jour",
+    "salesWeek": "Ventes de la semaine",
+    "salesMonth": "Ventes du mois",
+    "basket": "Panier moyen",
+    "orders": "{n} commandes",
+    "thisMonth": "ce mois-ci",
+    "last30": "Ventes, 30 derniers jours",
+    "topProducts": "Meilleurs produits",
+    "attention": "À surveiller",
+    "lowStock": "Articles en stock bas",
+    "lateJobs": "Fiches atelier en retard",
+    "openJobs": "Fiches atelier ouvertes",
+    "appointmentsToday": "Rendez-vous du jour",
+    "onlineToProcess": "Commandes en ligne à traiter",
+    "unpaidSupplierInvoices": "Factures fournisseurs impayées",
+    "pendingLeave": "Demandes de congé",
+    "newCustomers": "Nouveaux clients du mois",
+    "noReports": "Votre rôle n’a pas accès aux rapports.",
+    "attendance": "Présence",
+    "in": "Arrivée",
+    "out": "départ",
+    "notClockedIn": "Pas encore pointé",
+    "clockIn": "Pointer l’arrivée",
+    "clockOut": "Pointer le départ",
+    "clocked": "Enregistré"
   },
   "users": {
     "title": "Utilisateurs",
@@ -888,7 +916,29 @@
       "OVERLAPPING_HOURS": "Deux plages du même jour se chevauchent.",
       "INVALID_RANGE": "La fin doit être après le début.",
       "RANGE_TOO_LARGE": "Choisissez une période plus courte.",
-      "INVALID_PAYMENT_METHOD": "Ce mode de paiement ne peut pas être utilisé ici."
+      "INVALID_PAYMENT_METHOD": "Ce mode de paiement ne peut pas être utilisé ici.",
+      "USER_ALREADY_LINKED": "Ce compte appartient déjà à un autre employé.",
+      "DUPLICATE_NUMBER": "Ce numéro d’employé est déjà pris.",
+      "END_DATE_REQUIRED": "Un CDD nécessite une date de fin.",
+      "HAS_PAYSLIPS": "Cet employé a des bulletins : clôturez-le plutôt.",
+      "ALREADY_CLOCKED_IN": "Vous avez déjà pointé aujourd’hui.",
+      "ALREADY_CLOCKED_OUT": "Vous avez déjà pointé le départ.",
+      "NOT_CLOCKED_IN": "Pointez d’abord l’arrivée.",
+      "NO_EMPLOYEE": "Votre compte n’est pas lié à une fiche employé.",
+      "INVALID_TIMES": "Le départ doit suivre l’arrivée.",
+      "LEAVE_OVERLAP": "Chevauche une autre demande de congé.",
+      "INSUFFICIENT_BALANCE": "Solde de congés insuffisant ({remaining} restants, {requested} demandés).",
+      "NO_WORKING_DAYS": "Cette période ne contient aucun jour ouvré.",
+      "SELF_APPROVAL": "Vous ne pouvez pas décider de votre propre demande.",
+      "UNKNOWN_LEAVE_TYPE": "Type de congé inconnu.",
+      "RUN_EXISTS": "Une paie existe déjà pour cette période.",
+      "RUN_LOCKED": "Seule une paie en brouillon peut être modifiée.",
+      "NO_EMPLOYEES": "Aucun employé n’a de contrat couvrant cette période.",
+      "ALREADY_PAID": "Cette commission figure déjà sur un bulletin.",
+      "INVALID_TAX": "La TVA ne peut pas dépasser le total.",
+      "UNKNOWN_CATEGORY": "Catégorie de dépense inconnue.",
+      "UNKNOWN_ACCOUNT": "Compte inconnu.",
+      "NOT_MANUAL": "Seules les écritures manuelles peuvent être supprimées."
     }
   },
   "shopAdmin": {
@@ -1032,6 +1082,285 @@
       "deliveredCollected": "Livrée, espèces encaissées",
       "deliveredNoCash": "Livrée, non encaissée",
       "readyForPickup": "Prête au retrait (prévenir le client)"
+    }
+  },
+  "reports": {
+    "title": "Rapports",
+    "report": "Rapport",
+    "from": "Du",
+    "to": "Au",
+    "groupBy": "Grouper par",
+    "allStores": "Tous mes magasins",
+    "pdf": "PDF / Imprimer",
+    "empty": "Aucune donnée sur cette période.",
+    "total": "Total",
+    "note": "Le CA est TTC après remises et remboursements ; la marge utilise le coût enregistré de chaque article (coûts de laboratoire non inclus).",
+    "names": {
+      "sales": "Ventes",
+      "best-sellers": "Meilleures ventes",
+      "stock-value": "Valeur du stock",
+      "profit": "Rentabilité",
+      "top-customers": "Meilleurs clients"
+    },
+    "groups": {
+      "day": "Jour",
+      "week": "Semaine",
+      "month": "Mois",
+      "store": "Magasin",
+      "employee": "Vendeur",
+      "category": "Catégorie",
+      "brand": "Marque",
+      "product": "Produit",
+      "type": "Type de produit",
+      "channel": "Canal"
+    }
+  },
+  "finance": {
+    "title": "Finance",
+    "all": "Tous",
+    "from": "Du",
+    "to": "Au",
+    "tabs": {
+      "overview": "Vue d’ensemble",
+      "expenses": "Dépenses",
+      "cash": "Trésorerie",
+      "vat": "TVA",
+      "payments": "Paiements",
+      "setup": "Paramètres"
+    },
+    "ov": {
+      "cashIn": "Encaissements",
+      "cashOut": "Décaissements",
+      "net": "Trésorerie nette",
+      "vatDue": "TVA à payer",
+      "receivables": "Dû par les clients",
+      "orders": "{n} commandes",
+      "payables": "Dû aux fournisseurs",
+      "invoices": "{n} factures",
+      "overdue": "En retard fournisseurs",
+      "expenses": "Dépenses",
+      "thisMonth": "ce mois-ci",
+      "inVsOut": "Trésorerie nette par jour, ce mois",
+      "accounts": "Comptes"
+    },
+    "exp": {
+      "new": "Nouvelle dépense",
+      "hint": "Saisissez la dépense ; un comptable la valide puis la règle.",
+      "category": "Catégorie",
+      "description": "Description",
+      "amount": "Montant",
+      "amountIncl": "Total TTC",
+      "vat": "Dont TVA",
+      "date": "Date",
+      "number": "N°",
+      "status": "Statut",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "pay": "Marquer payée",
+      "done": "Fait",
+      "statuses": {
+        "DRAFT": "Brouillon",
+        "APPROVED": "Approuvée",
+        "PAID": "Payée",
+        "REJECTED": "Rejetée"
+      }
+    },
+    "cf": {
+      "in": "Entrée",
+      "out": "Sortie",
+      "byDay": "Par jour",
+      "bySource": "Par origine",
+      "addEntry": "Ajouter une écriture",
+      "sources": {
+        "SALES": "Ventes",
+        "REFUNDS": "Remboursements",
+        "SUPPLIERS": "Paiements fournisseurs",
+        "EXPENSE": "Dépenses",
+        "PAYROLL": "Salaires",
+        "MANUAL": "Écritures manuelles"
+      }
+    },
+    "vat": {
+      "title": "TVA",
+      "collected": "TVA collectée",
+      "deductible": "TVA déductible",
+      "due": "TVA à payer",
+      "byRate": "Ventes par taux de TVA",
+      "rate": "Taux",
+      "base": "Base HT",
+      "creditNotes": "Avoirs",
+      "supplierInvoices": "Factures fournisseurs",
+      "expenses": "Dépenses",
+      "note": "Chiffres indicatifs : à valider avec votre comptable avant déclaration."
+    },
+    "pay": {
+      "date": "Date",
+      "method": "Mode",
+      "order": "Commande",
+      "customer": "Client",
+      "kind": "Nature",
+      "amount": "Montant",
+      "count": "{n} paiements",
+      "kinds": {
+        "PAYMENT": "Paiement",
+        "DEPOSIT": "Acompte",
+        "REFUND": "Remboursement"
+      }
+    },
+    "setup": {
+      "categories": "Catégories de dépenses",
+      "accounts": "Comptes",
+      "bank": "Banque",
+      "opening": "Solde d’ouverture",
+      "cashAccount": "Compte espèces",
+      "cashAccountHint": "Une caisse, pas une banque"
+    }
+  },
+  "hr": {
+    "title": "Ressources humaines",
+    "all": "Tous",
+    "name": "Nom",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "number": "N°",
+    "phone": "Téléphone",
+    "position": "Poste",
+    "department": "Service",
+    "hireDate": "Date d’embauche",
+    "cnss": "N° CNSS",
+    "employee": "Employé",
+    "period": "Période",
+    "startDate": "Début",
+    "endDate": "Fin",
+    "grossSalary": "Salaire brut mensuel",
+    "newEmployee": "Nouvel employé",
+    "numberGenerated": "Numéro généré à l’enregistrement",
+    "login": "Compte du tableau de bord",
+    "loginHint": "Reliez un compte pour permettre pointage et demandes de congé",
+    "contracts": "Contrats",
+    "current": "En cours",
+    "addContract": "Ajouter un contrat (clôt le précédent)",
+    "terminate": "Mettre fin au contrat de travail",
+    "confirmTerminate": "Clôturer cet employé ? Ses contrats prendront fin.",
+    "tabs": {
+      "employees": "Employés",
+      "attendance": "Présence",
+      "leave": "Congés",
+      "commissions": "Commissions",
+      "payroll": "Paie",
+      "settings": "Paramètres"
+    },
+    "status": {
+      "label": "Statut",
+      "ACTIVE": "Actif",
+      "ON_LEAVE": "En congé",
+      "TERMINATED": "Parti"
+    },
+    "att": {
+      "present": "Présent",
+      "late": "Retards",
+      "absent": "Absent",
+      "leave": "Congé",
+      "worked": "Heures travaillées",
+      "in": "Arrivée",
+      "out": "Départ",
+      "record": "Enregistrer",
+      "status": {
+        "PRESENT": "Présent",
+        "LATE": "En retard",
+        "ABSENT": "Absent",
+        "LEAVE": "Congé",
+        "HOLIDAY": "Férié"
+      }
+    },
+    "leave": {
+      "request": "Demander un congé",
+      "requestHint": "Les jours ouvrés sont comptés pour vous (hors dimanches).",
+      "type": "Type de congé",
+      "left": "{n} j restants",
+      "period": "Période",
+      "days": "Jours",
+      "reason": "Motif",
+      "unpaid": "sans solde",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "cancel": "Annuler",
+      "confirmCancel": "Annuler ce congé ?",
+      "done": "Fait",
+      "status": {
+        "PENDING": "En attente",
+        "APPROVED": "Approuvé",
+        "REJECTED": "Refusé",
+        "CANCELLED": "Annulé"
+      }
+    },
+    "comm": {
+      "calculate": "Calculer",
+      "approveAll": "Valider le mois",
+      "calculated": "{n} commissions calculées ({total})",
+      "approved": "{n} validées",
+      "hint": "La commission est calculée sur les ventes en caisse du mois de chaque vendeur, nettes des retours, selon les règles actives. Recalculer reconstruit ce qui n’est pas encore validé.",
+      "rule": "Règle",
+      "base": "Base de vente",
+      "amount": "Commission",
+      "void": "Annuler",
+      "rate": "Taux",
+      "value": "Valeur",
+      "status": {
+        "PENDING": "En attente",
+        "APPROVED": "Validée",
+        "PAID": "Payée",
+        "VOID": "Annulée"
+      }
+    },
+    "pay": {
+      "newRun": "Nouvelle paie",
+      "created": "Brouillon de paie créé",
+      "payslips": "Bulletins",
+      "gross": "Brut",
+      "net": "Net",
+      "amount": "Montant",
+      "run": "Paie",
+      "disclaimer": "Paie simplifiée : CNSS, AMO et IR suivent un barème simplifié aux taux modifiables (réglage payroll_config). Faites-le valider par un comptable avant de payer de vrais salaires.",
+      "approve": "Valider",
+      "confirmApprove": "Valider cette paie ? Elle ne sera plus modifiable.",
+      "confirmDelete": "Supprimer ce brouillon ?",
+      "markPaid": "Marquer payée",
+      "confirmPay": "Marquer tous les salaires payés et enregistrer la sortie de trésorerie ?",
+      "account": "Compte",
+      "noAccount": "Sans compte",
+      "adjust": "Ajouter prime / retenue",
+      "print": "Bulletin",
+      "kinds": {
+        "BONUS": "Prime",
+        "DEDUCTION": "Retenue"
+      },
+      "status": {
+        "DRAFT": "Brouillon",
+        "APPROVED": "Validée",
+        "PAID": "Payée"
+      }
+    },
+    "set": {
+      "leaveTypes": "Types de congé",
+      "rules": "Règles de commission",
+      "paid": "Congé payé",
+      "allowance": "Jours par an",
+      "allowanceHint": "Vide = illimité",
+      "approval": "Nécessite validation",
+      "scope": "S’applique à",
+      "productTypeHint": "Utilisé si « S’applique à » est un type de produit",
+      "minSale": "Vente minimum",
+      "scopes": {
+        "ALL": "Toutes les ventes",
+        "CATEGORY": "Catégorie",
+        "BRAND": "Marque",
+        "PRODUCT_TYPE": "Type de produit"
+      },
+      "rateTypes": {
+        "PERCENT": "Pourcentage",
+        "FIXED": "Par unité"
+      }
     }
   }
 }

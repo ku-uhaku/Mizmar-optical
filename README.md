@@ -3,10 +3,10 @@
 Optical-store platform: a public **storefront** and an **admin ERP** (POS, inventory, purchasing, lens workshop,
 appointments, HR, finance, reports), fully configurable from the dashboard.
 
-> **Status: Phases 1–5 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; the
+> **Status: Phases 1–6 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; the
 > **point of sale** (register sessions, checkout, prescription orders with deposits, returns, quotes, invoices); and
 > **purchasing + workshop** (suppliers, purchase orders, goods receipts, supplier invoices/payments, lens-lab job orders).
-> **storefront commerce + appointments** (public catalog, lens configurator, cart/coupons, checkout, accounts, booking). HR, finance and reports arrive in phases 6–7 (see [Roadmap](#roadmap)).
+> **storefront commerce + appointments** (public catalog, lens configurator, cart/coupons, checkout, accounts, booking). **HR, finance and reports** (employees, attendance, leave, commissions, payroll, expenses, cash flow, VAT, dashboards, Excel/CSV/PDF exports). Settings polish and hardening arrive in phase 7 (see [Roadmap](#roadmap)).
 
 | Part | Stack | Port |
 |---|---|---|
@@ -203,6 +203,29 @@ How the money side works — worth knowing before touching it:
   (CMI, Stripe, PayPal) is one class that returns `CAPTURED` or a redirect URL.
 - Not built yet: real payment gateway, SMS/WhatsApp sending (queued and logged), email verification at sign-up, WhatsApp/Google reviews import.
 
+## What phase 6 added (HR, finance, reports)
+
+| Area | API | Admin screen |
+|---|---|---|
+| Employees & contracts | `employees`, `employees/:id/contracts` (a new contract closes the previous one) | **Ressources humaines** |
+| Attendance | self-service `hr/clock/in|out` (late detection via `hr.work_start`), manual entries, monthly summary | HR → Présence, dashboard clock card |
+| Leave | `leave-types`, `leave-requests` (working days counted, yearly allowance, no overlaps, nobody approves their own), balances | HR → Congés |
+| Commissions | `commission-rules`, `commissions/calculate|approve` (till sales net of returns; re-runnable) | HR → Commissions |
+| Payroll | `payroll/runs` → payslips (base, absences, commissions, CNSS, AMO, IR) → adjust → approve → pay; `payslips/:id/document` | HR → Paie |
+| Expenses | `expenses` (draft → approved → paid; paying records the cash out exactly once), `expense-categories`, `bank-accounts` | **Finance** |
+| Cash flow, VAT, payments | `finance/cash-flow` (assembled from payments, refunds, supplier payments, expenses, payroll and manual entries), `finance/vat`, `finance/payments`, `credit-notes`, `finance/summary` | Finance tabs |
+| Reports | `reports/{dashboard,sales,best-sellers,stock-value,profit,top-customers}` and `reports/export/:name?format=xlsx|csv|html` | **Rapports**, dashboard |
+
+- **Salary data is protected:** contracts, IBAN, CNSS and national id are only returned to people with `hr:payroll`; the store manager role
+  deliberately lacks it.
+- **Payroll is "basic" and says so.** CNSS (capped), AMO, a professional-expenses abatement and the progressive income-tax scale follow a
+  simplified Moroccan scheme with editable numbers (setting `payroll_config`). Have an accountant validate it before paying real salaries.
+  Approved runs are locked; paying writes one cash-flow entry per payslip.
+- **Reports compute from the source tables** (no copies to drift): revenue is VAT-inclusive net of discounts and refunds, margin uses each
+  item's recorded cost (lens-lab costs and delivery fees are not part of an item). Excel files contain real numbers; CSV cells that look like
+  formulas are neutralised; the "PDF" export is a print-ready page (Print → Save as PDF).
+- Not built: payslip PDF files (printable HTML), CNSS/DAMANCOM declaration files, bank reconciliation, multi-currency.
+
 ## Troubleshooting
 
 - **`ERR_PNPM_IGNORED_BUILDS` (install exits 1)** — pnpm 12 refuses to finish installing when a dependency has an
@@ -242,5 +265,5 @@ How the money side works — worth knowing before touching it:
 3. ✅ **POS, sales, invoices**
 4. ✅ **Purchasing, workshop / fabrication**
 5. ✅ **Storefront commerce (catalog, lens configurator, checkout), appointments**
-6. HR, finance, reports
+6. ✅ **HR, finance, reports**
 7. Full settings UI, i18n polish, tests, hardening
