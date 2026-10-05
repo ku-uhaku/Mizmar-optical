@@ -3,8 +3,9 @@
 Optical-store platform: a public **storefront** and an **admin ERP** (POS, inventory, purchasing, lens workshop,
 appointments, HR, finance, reports), fully configurable from the dashboard.
 
-> **Status: Phase 1 of 7 complete** — monorepo, infra, full database schema, auth + RBAC, seed data, admin shell,
-> storefront shell. Business modules arrive in phases 2–7 (see [Roadmap](#roadmap)).
+> **Status: Phases 1–2 of 7 complete** — foundations, plus catalog, products, inventory, customers and prescriptions
+> (API + admin screens). POS, purchasing, workshop, storefront commerce, HR, finance and reports arrive in phases 3–7
+> (see [Roadmap](#roadmap)).
 
 | Part | Stack | Port |
 |---|---|---|
@@ -90,6 +91,29 @@ The demo accounts exist to try role-based access (e.g. log in as the cashier and
 - **Queues** — BullMQ `mail` / `sms` / `notification`. In development, emails and SMS are rendered from the
   dashboard-editable templates and **logged to the API console** (no SMTP configured yet).
 
+## What phase 2 added
+
+| Area | API (Swagger tag) | Admin screen |
+|---|---|---|
+| Reference data | `brands`, `categories`, `frame-shapes`, `frame-materials`, `lens-types`, `lens-treatments`, `lens-entries` | **Catalog** (one tab per table) |
+| Products | `products` — variants, images, frame specs, opening stock, `GET /products/lookup/:barcodeOrSku` | **Products** (list + filters, editor, variants, image upload) |
+| Inventory | `inventory` — stock levels, ledger, adjustments, transfers (draft → in transit → received), counts, `warehouses` | **Stock** (overview, movements, adjustments, transfers, counts) |
+| Customers | `customers` — duplicates detection, addresses, notes, insurance, CSV export | **Customers** (list + detail tabs) |
+| Prescriptions | `prescriptions` — OD/OS, validated against optical rules (0.25 steps, axis ⇔ cylinder, ranges) | tab on the customer page |
+| Files | `POST /media?folder=` — type checked by file signature, 5 MB cap | used by product images and prescription scans |
+
+Design rules worth knowing before adding modules:
+
+- **All stock changes go through `StockService.move()`.** It does one atomic conditional update (no overselling under
+  concurrency) and appends an immutable `StockMovement` with the resulting balance. POS, purchasing and the workshop
+  will call it too; never write `StockLevel` directly.
+- **Document numbers** (`CASA-TRF-2026-000042`) come from `NumberingService.next(tx, storeId, type)` inside the
+  transaction that creates the document. Prefix, padding and reset policy are editable per store (`DocumentSequence`).
+- **Simple reference tables** are built with `SimpleCrudService` + `createCrudController` (see `modules/catalog`): a
+  config object, two DTOs and one line in the module. Validation still applies (DTOs are registered as route metadata).
+- **Store scoping:** stock and documents are limited to the stores a user belongs to; super admins see everything.
+- **Money and dioptres** are `Decimal` in the database and plain JSON numbers in API responses.
+
 ## Troubleshooting
 
 - **`ERR_PNPM_IGNORED_BUILDS` (install exits 1)** — pnpm 12 refuses to finish installing when a dependency has an
@@ -109,6 +133,14 @@ The demo accounts exist to try role-based access (e.g. log in as the cashier and
 
 ## Security notes / known hardening items
 
+- **Rate limits** (`THROTTLE_*` in `.env`): signed-in traffic is limited **per user** (default 600/min) so colleagues
+  sharing one shop router don't lock each other out; anonymous traffic is limited per IP. Password endpoints
+  (`login`, `forgot-password`, `reset-password`) have a much stricter per-IP limit (`THROTTLE_AUTH_LIMIT`, default
+  10/min). `auth/refresh` is deliberately *not* in that strict bucket: its token is unguessable and every page load
+  calls it. If the API sits behind a reverse proxy, enable Express `trust proxy` so `req.ip` is the real client.
+- **Uploads** are validated by file signature, never by the client's Content-Type or file name; PDFs are only accepted
+  for prescriptions. Files are stored under random keys in a public-read bucket — do not upload anything private there.
+
 - Admin keeps the **refresh token in `localStorage`** (access token in memory). That is simple but readable by any XSS;
   before production, move the refresh token to an `httpOnly` cookie via a Next.js route handler (BFF).
 - CMS page HTML is rendered as authored by trusted staff; add server-side sanitisation when the page editor lands.
@@ -117,7 +149,7 @@ The demo accounts exist to try role-based access (e.g. log in as the cashier and
 ## Roadmap
 
 1. ✅ **Foundations** — monorepo, infra, schema, auth + RBAC, seed, admin + storefront shells
-2. Products, inventory, customers, prescriptions
+2. ✅ **Products, inventory, customers, prescriptions**
 3. POS, sales, invoices
 4. Purchasing, workshop / fabrication
 5. Storefront commerce (catalog, lens configurator, checkout), appointments

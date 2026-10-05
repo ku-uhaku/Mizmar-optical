@@ -31,6 +31,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         } else message = b.message ?? exception.message;
         details = b.details ?? details;
       }
+    } else if ((exception as Error)?.name === 'PrismaClientValidationError') {
+      // e.g. `null` for a required column slipped past @IsOptional(): the client's fault, not ours. Details stay in the log.
+      status = HttpStatus.BAD_REQUEST;
+      code = 'INVALID_DATA';
+      message = 'The request contains invalid or missing values';
+      this.logger.warn(`Prisma validation (${req.method} ${req.url}): ${(exception as Error).message.split('\n').slice(-3).join(' ').slice(0, 300)}`);
     } else if (this.isPrismaError(exception)) {
       const e = exception as { code: string; meta?: Record<string, unknown> };
       if (e.code === 'P2002') {
@@ -42,6 +48,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         status = HttpStatus.NOT_FOUND;
         code = 'NOT_FOUND';
         message = 'Record not found';
+      } else if (e.code === 'P2011' || e.code === 'P2012') {
+        status = HttpStatus.BAD_REQUEST;
+        code = 'INVALID_DATA';
+        message = 'A required value is missing';
       } else if (e.code === 'P2003') {
         status = HttpStatus.CONFLICT;
         code = 'FOREIGN_KEY_VIOLATION';

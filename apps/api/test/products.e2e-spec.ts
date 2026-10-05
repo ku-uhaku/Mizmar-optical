@@ -100,6 +100,18 @@ describe('Products & inventory (e2e)', () => {
       await admin.get('/products/lookup/does-not-exist').expect(404);
     });
 
+    it('lookup hides drafts by default (POS scan) but inventory screens can opt in with includeInactive', async () => {
+      const draft = await newProduct({ status: 'DRAFT' });
+      const sku = draft.variants[0].sku;
+      await admin.get(`/products/lookup/${sku}`).expect(404);
+      const found = (await admin.get(`/products/lookup/${sku}?includeInactive=true`).expect(200)).body;
+      expect(found.id).toBe(draft.variants[0].id);
+      await admin.get(`/products/lookup/${sku}?includeInactive=banana`).expect(400);
+      const archived = await newProduct({ status: 'ARCHIVED' });
+      await admin.get(`/products/lookup/${archived.variants[0].sku}`).expect(404);
+      await admin.get(`/products/lookup/${archived.variants[0].sku}?includeInactive=true`).expect(200);
+    });
+
     it('lists with filters, search (name / sku / barcode), price range and stock totals', async () => {
       const p = await newProduct({ name: `Zzfilter ${uid()}`, gender: 'WOMEN' });
       const v = p.variants[0];

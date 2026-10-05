@@ -1,7 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
 import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { validateEnv, type Env } from './config/env';
@@ -28,7 +29,12 @@ import { MediaModule } from './modules/media/media.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { HealthController } from './modules/health/health.controller';
 
-const AUTH_ROUTES = /\/auth\/(login|refresh|forgot-password|reset-password)/;
+/**
+ * Strict brute-force bucket: only endpoints where an attacker can GUESS the secret (passwords, reset emails).
+ * `refresh` is deliberately excluded: its token is 64 random bytes (unguessable) and every full page load calls it, so
+ * a strict per-IP cap there would log out whole shops sharing one router. It falls under the general per-IP limit.
+ */
+const AUTH_ROUTES = /\/auth\/(login|forgot-password|reset-password)/;
 
 @Module({
   imports: [
@@ -65,9 +71,9 @@ const AUTH_ROUTES = /\/auth\/(login|refresh|forgot-password|reset-password)/;
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
-    // Order matters: rate limit -> authenticate -> resolve store -> authorize.
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Order matters: authenticate -> rate limit (per user, else per IP) -> resolve store -> authorize.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: UserThrottlerGuard },
     { provide: APP_GUARD, useClass: StoreScopeGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],

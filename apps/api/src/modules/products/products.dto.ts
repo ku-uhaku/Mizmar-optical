@@ -84,6 +84,10 @@ export class ListProductsDto extends PaginationDto {
   @ApiPropertyOptional() @o() @Type(() => Number) @IsNumber() @Min(0) maxPrice?: number;
 }
 
+export class LookupQueryDto {
+  @ApiPropertyOptional({ description: 'Also match draft/archived products and inactive variants (inventory screens)' }) @o() @bool() @IsBoolean() includeInactive?: boolean;
+}
+
 export class AddImageDto {
   @ApiProperty() @IsString() @Matches(/^(https?:\/\/|\/)[^\s]+$/, { message: 'url must be http(s) or an absolute path' }) url!: string;
   @ApiPropertyOptional() @o() @IsString() alt?: string;

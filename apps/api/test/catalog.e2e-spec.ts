@@ -15,6 +15,14 @@ describe('Catalog reference data (e2e)', () => {
     await admin.post('/brands', { name: 'X', deletedAt: '2020-01-01' }).expect(400); // no mass-assignment of system columns
   });
 
+  it('a null for a REQUIRED column is a client error (400), never a 500', async () => {
+    const b = (await admin.post('/brands', { name: `Nullable ${uid()}` }).expect(201)).body;
+    const r = await admin.patch(`/brands/${b.id}`, { name: null });
+    expect(r.status).toBe(400);
+    await admin.patch(`/brands/${b.id}`, { description: null }).expect(200); // clearing an OPTIONAL field with null is allowed
+    await admin.del(`/brands/${b.id}`).expect(204);
+  });
+
   it('brand: auto slug, collision-safe slugs, update, list filter/search, soft delete releases the slug', async () => {
     const name = `Test Brand ${uid()}`;
     const a = (await admin.post('/brands', { name }).expect(201)).body;

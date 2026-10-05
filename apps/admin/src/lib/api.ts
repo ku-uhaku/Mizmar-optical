@@ -62,4 +62,31 @@ export async function api<T = unknown>(path: string, { method = 'GET', body, que
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
+/** multipart/form-data upload (browser sets the boundary, so no Content-Type header). Same auth + one-shot refresh as api(). */
+export async function apiUpload<T = unknown>(path: string, file: File, query?: Record<string, string>, retried = false): Promise<T> {
+  const qs = query ? '?' + new URLSearchParams(query).toString() : '';
+  const body = new FormData();
+  body.append('file', file);
+  const headers: Record<string, string> = {};
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  const res = await fetch(`${API_URL}${path}${qs}`, { method: 'POST', headers, body });
+  if (res.status === 401 && !retried && (await refreshSession())) return apiUpload<T>(path, file, query, true);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, err.code ?? 'ERROR', err.message ?? res.statusText, err.details);
+  }
+  return res.json() as Promise<T>;
+}
+
+/** Authenticated file download (e.g. CSV export): fetch with the bearer token, then hand the blob to the browser. */
+export async function apiDownload(path: string, filename: string) {
+  let res = await fetch(`${API_URL}${path}`, { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} });
+  if (res.status === 401 && (await refreshSession())) res = await fetch(`${API_URL}${path}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (!res.ok) throw new ApiError(res.status, 'DOWNLOAD_FAILED', res.statusText);
+  const url = URL.createObjectURL(await res.blob());
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export interface Paginated<T> { data: T[]; meta: { page: number; limit: number; total: number; totalPages: number } }

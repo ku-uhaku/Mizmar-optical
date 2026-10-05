@@ -1,4 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -12,6 +13,9 @@ import { Prisma } from './generated/prisma/client';
 /** Shared by main.ts and the e2e tests so tests exercise the real pipeline. */
 export function setupApp(app: INestApplication) {
   const config = app.get(ConfigService<Env, true>);
+  // Behind a reverse proxy the socket address is the proxy's; without this every user shares one rate-limit bucket.
+  const proxy = config.get('TRUST_PROXY', { infer: true });
+  if (proxy) (app as NestExpressApplication).set('trust proxy', proxy === 'true' ? true : /^\d+$/.test(proxy) ? Number(proxy) : proxy);
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
   app.use(compression());

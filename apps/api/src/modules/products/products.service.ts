@@ -73,9 +73,10 @@ export class ProductsService {
   }
 
   /** POS / barcode scanner: exact barcode or SKU -> variant + product + stock in the active store. */
-  async lookup(code: string, user: AuthUser, storeId?: string | null) {
+  async lookup(code: string, user: AuthUser, storeId?: string | null, includeInactive = false) {
+    // POS-style scans only see sellable items; stock operations (adjust/transfer/count) must also reach drafts and archived items
     const variant = await this.prisma.db.productVariant.findFirst({
-      where: { isActive: true, OR: [{ barcode: code }, { sku: { equals: code, mode: 'insensitive' } }], product: { deletedAt: null, status: 'ACTIVE' } },
+      where: { ...(includeInactive ? {} : { isActive: true }), OR: [{ barcode: code }, { sku: { equals: code, mode: 'insensitive' } }], product: { deletedAt: null, ...(includeInactive ? {} : { status: 'ACTIVE' as const }) } },
       include: { product: { select: { id: true, name: true, type: true, requiresPrescription: true, isLensConfigurable: true, brand: { select: { name: true } } } } },
     });
     if (!variant) throw new NotFoundException({ code: 'NOT_FOUND', message: 'No active product matches this code' });

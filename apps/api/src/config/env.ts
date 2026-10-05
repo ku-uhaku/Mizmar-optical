@@ -12,8 +12,10 @@ export const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
   CORS_ORIGINS: z.string().default('http://localhost:3000,http://localhost:3002'),
+  /** Express `trust proxy`: hops ("1"), "true", "loopback", or a subnet list. Unset = trust nobody (correct when exposed directly). */
+  TRUST_PROXY: z.string().optional(),
   THROTTLE_TTL: z.coerce.number().default(60),
-  THROTTLE_LIMIT: z.coerce.number().default(100),
+  THROTTLE_LIMIT: z.coerce.number().default(600),
   THROTTLE_AUTH_LIMIT: z.coerce.number().default(10),
   S3_ENDPOINT: z.string().url(),
   S3_REGION: z.string().default('us-east-1'),

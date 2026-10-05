@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentStore, CurrentUser, Permissions } from '../../common/decorators';
 import type { AuthUser } from '../../common/types';
-import { AddImageDto, CreateProductDto, CreateVariantDto, ListProductsDto, ReorderImagesDto, UpdateProductDto, UpdateVariantDto } from './products.dto';
+import { AddImageDto, LookupQueryDto, CreateProductDto, CreateVariantDto, ListProductsDto, ReorderImagesDto, UpdateProductDto, UpdateVariantDto } from './products.dto';
 import { ProductsService } from './products.service';
 
 @ApiTags('products') @ApiBearerAuth()
@@ -15,7 +15,7 @@ export class ProductsController {
 
   /** Barcode scanner / SKU entry. Declared before ':id' so "lookup" is not read as an id. */
   @Get('lookup/:code') @Permissions('products:read')
-  lookup(@Param('code') code: string, @CurrentUser() u: AuthUser, @CurrentStore() s: string | null) { return this.products.lookup(code, u, s); }
+  lookup(@Param('code') code: string, @Query() q: LookupQueryDto, @CurrentUser() u: AuthUser, @CurrentStore() s: string | null) { return this.products.lookup(code, u, s, q.includeInactive === true); }
 
   @Get(':id') @Permissions('products:read')
   get(@Param('id') id: string, @CurrentUser() u: AuthUser, @CurrentStore() s: string | null) { return this.products.get(id, u, s); }
