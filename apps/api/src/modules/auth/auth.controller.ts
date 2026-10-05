@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
-import { CurrentUser, Public, SkipAudit } from '../../common/decorators';
+import { AllowCustomer, CurrentUser, Public, SkipAudit } from '../../common/decorators';
 import type { AuthUser } from '../../common/types';
 import { AuthService } from './auth.service';
 import { ForgotPasswordDto, LoginDto, RefreshDto, ResetPasswordDto } from './dto/auth.dto';
@@ -40,7 +40,7 @@ export class AuthController {
     await this.auth.resetPassword(dto.token, dto.password);
   }
 
-  @ApiBearerAuth() @Get('me')
+  @AllowCustomer() @ApiBearerAuth() @Get('me')
   me(@CurrentUser() user: AuthUser) {
     return user;
   }

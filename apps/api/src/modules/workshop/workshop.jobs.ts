@@ -26,15 +26,18 @@ export async function moveJob(tx: Tx, job: { id: string; status: string }, to: J
 interface LensLine { lineId: string; variantId: string | null; description: string; lens: { lensTypeId: string; lensEntryId: string | null; prescriptionId: string | null; treatments: { treatmentId: string; name: string }[]; notes?: string } }
 
 /** One job per prescription line, created inside the checkout transaction so a sale and its workshop ticket can never disagree. */
-export async function createJobsForOrder(tx: Tx, numbering: NumberingService, o: { orderId: string; storeId: string; customerId: string; userId: string; defaultDays: number; lines: LensLine[] }) {
+export async function createJobsForOrder(tx: Tx, numbering: NumberingService, o: { orderId: string; storeId: string; customerId: string; userId: string | null; defaultDays: number; lines: LensLine[] }) {
   for (const l of o.lines) {
     const entry = l.lens.lensEntryId ? await tx.lensCatalogEntry.findUnique({ where: { id: l.lens.lensEntryId } }) : null;
     const days = entry?.leadTimeDays ?? o.defaultDays;
+    // a prescription the customer typed or scanned online has not been checked by staff: flag it on the ticket so nobody cuts blind
+    const rx = l.lens.prescriptionId ? await tx.prescription.findUnique({ where: { id: l.lens.prescriptionId }, select: { source: true, verifiedAt: true } }) : null;
+    const notes = [rx && rx.source !== 'STORE' && !rx.verifiedAt ? 'Ordonnance à vérifier avant taillage (saisie / scan client)' : null, l.lens.notes].filter(Boolean).join(' — ') || undefined;
     const number = await numbering.next(tx, o.storeId, 'JOB_ORDER');
     const job = await tx.jobOrder.create({
       data: {
         storeId: o.storeId, number, orderId: o.orderId, orderLineId: l.lineId, customerId: o.customerId, prescriptionId: l.lens.prescriptionId, frameSource: 'STORE_STOCK', frameVariantId: l.variantId,
-        lensTypeId: l.lens.lensTypeId, lensEntryId: l.lens.lensEntryId, treatments: l.lens.treatments.map((t) => ({ id: t.treatmentId, name: t.name })), notes: l.lens.notes,
+        lensTypeId: l.lens.lensTypeId, lensEntryId: l.lens.lensEntryId, treatments: l.lens.treatments.map((t) => ({ id: t.treatmentId, name: t.name })), notes,
         status: 'PENDING', promisedAt: new Date(Date.now() + days * 86_400_000), createdById: o.userId,
         tasks: { create: DEFAULT_TASKS.map((name, i) => ({ name, sortOrder: i })) },
       },

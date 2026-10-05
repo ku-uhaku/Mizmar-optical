@@ -119,6 +119,13 @@ export class AuthService {
   }
 
   // ---------- helpers ----------
+  /** Tokens for a freshly created account (storefront registration). */
+  async startSession(userId: string, meta: ClientMeta) {
+    const user = await this.prisma.raw.user.findUniqueOrThrow({ where: { id: userId } });
+    const { tokenId: _t, ...tokens } = await this.issueTokens(user.id, user.email, meta);
+    return { ...tokens, user: await this.loadAuthUser(user.id) };
+  }
+
   private async issueTokens(userId: string, email: string, meta: ClientMeta, familyId = newToken().slice(0, 24)): Promise<TokenPair & { tokenId: string }> {
     const accessTtl = this.config.get('JWT_ACCESS_TTL', { infer: true });
     const accessToken = await this.jwt.signAsync({ sub: userId, email }, { secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }), expiresIn: Math.floor(ttlToMs(accessTtl) / 1000) });
@@ -148,8 +155,11 @@ export class AuthService {
     const permissions = new Set<string>();
     user.roles.forEach((ur) => ur.role.permissions.forEach((rp) => permissions.add(rp.permission.key)));
     const defaultStore = user.stores.find((s) => s.isDefault) ?? user.stores[0];
+    const customer = user.type === 'CUSTOMER' ? await this.prisma.db.customer.findFirst({ where: { userId: user.id }, select: { id: true } }) : null;
     return {
       id: user.id,
+      type: user.type,
+      customerId: customer?.id ?? null,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

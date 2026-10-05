@@ -4,6 +4,9 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   locale: string;
+  type: 'STAFF' | 'CUSTOMER';
+  /** The CRM customer linked to a storefront account. */
+  customerId: string | null;
   isSuperAdmin: boolean;
   roles: string[]; // role codes
   permissions: string[]; // effective `module:action` keys (empty for super admin; bypassed)

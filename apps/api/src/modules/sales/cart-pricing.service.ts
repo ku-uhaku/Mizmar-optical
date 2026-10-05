@@ -40,9 +40,10 @@ const inRange = (v: number | null, min: unknown, max: unknown) => v == null || (
 export class CartPricingService {
   constructor(private readonly prisma: PrismaService, private readonly settings: SettingsService) {}
 
-  async price(lines: SaleLineDto[], ctx: { user: AuthUser; storeId: string; customerId?: string | null }): Promise<PricedCart> {
+  async price(lines: SaleLineDto[], ctx: { user: AuthUser | null; storeId: string; customerId?: string | null; trustedDiscounts?: boolean }): Promise<PricedCart> {
     const wantsDiscount = lines.some((l) => l.discount && l.discount.value > 0);
-    if (wantsDiscount && !ctx.user.isSuperAdmin && !ctx.user.permissions.includes('pos:discount')) {
+    // `trustedDiscounts` is set only by server code that computed the discount itself (online coupons); a till discount needs the permission
+    if (wantsDiscount && !ctx.trustedDiscounts && !ctx.user?.isSuperAdmin && !ctx.user?.permissions.includes('pos:discount')) {
       throw new ForbiddenException({ code: 'MISSING_PERMISSION', message: 'Insufficient permissions', details: { missing: ['pos:discount'] } });
     }
     const variants = await this.prisma.db.productVariant.findMany({
@@ -113,7 +114,9 @@ export class CartPricingService {
     } else if (needRx && lensType.kind !== 'PLANO') {
       throw new BadRequestException({ code: 'PRESCRIPTION_REQUIRED', message: 'A prescription is required for corrective lenses' });
     }
-    if (rx) {
+    // a customer's uploaded scan has no typed values: staff transcribe and verify it at the bench, so there is nothing to range-check yet
+    const scanOnly = rx?.source === 'UPLOAD' && ['odSph', 'osSph', 'odCyl', 'osCyl', 'odAdd', 'osAdd'].every((k) => rx![k] == null);
+    if (rx && !scanOnly) {
       if (lensType.requiresAdd && rx.odAdd == null && rx.osAdd == null) throw new BadRequestException({ code: 'ADDITION_REQUIRED', message: `${lensType.name} lenses need an addition (ADD) on the prescription` });
       if (entry) {
         for (const eye of RX_EYES) {

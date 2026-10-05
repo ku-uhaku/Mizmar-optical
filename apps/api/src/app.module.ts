@@ -31,6 +31,7 @@ import { PosModule } from './modules/pos/pos.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { WorkshopModule } from './modules/workshop/workshop.module';
+import { ShopModule } from './modules/shop/shop.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { HealthController } from './modules/health/health.controller';
 
@@ -39,7 +40,7 @@ import { HealthController } from './modules/health/health.controller';
  * `refresh` is deliberately excluded: its token is 64 random bytes (unguessable) and every full page load calls it, so
  * a strict per-IP cap there would log out whole shops sharing one router. It falls under the general per-IP limit.
  */
-const AUTH_ROUTES = /\/auth\/(login|forgot-password|reset-password)/;
+const AUTH_ROUTES = /\/(auth\/(login|forgot-password|reset-password)|public\/auth\/register|public\/orders\/track)/;
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ const AUTH_ROUTES = /\/auth\/(login|forgot-password|reset-password)/;
     SalesModule,
     PurchasingModule,
     WorkshopModule,
+    ShopModule,
   ],
   controllers: [HealthController],
   providers: [

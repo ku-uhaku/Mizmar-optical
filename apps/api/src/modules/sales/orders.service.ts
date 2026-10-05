@@ -176,7 +176,7 @@ export class OrdersService {
     if (paySum < min || paySum === 0) throw new BadRequestException({ code: 'DEPOSIT_TOO_LOW', message: `A deposit of at least ${pct}% is required for prescription orders`, details: { minimum: fromCents(min), received: fromCents(paySum), percent: pct } });
   }
 
-  private async createInvoice(tx: Tx, o: { orderId: string; storeId: string; customerId: string | null; cart: PricedCart; number: string }) {
+  async createInvoice(tx: Tx, o: { orderId: string; storeId: string; customerId: string | null; cart: PricedCart; number: string }) {
     const [store, customer, branding] = await Promise.all([
       tx.store.findUniqueOrThrow({ where: { id: o.storeId }, select: { name: true, address: true, city: true, phone: true, email: true } }),
       o.customerId ? tx.customer.findUnique({ where: { id: o.customerId }, select: { code: true, firstName: true, lastName: true, phone: true, email: true } }) : null,

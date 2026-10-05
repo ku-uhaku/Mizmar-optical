@@ -129,6 +129,8 @@ async function seedCommerceConfig() {
     { code: 'cheque', name: 'Chèque', type: 'CHEQUE', availableOnline: false, availableInPos: true, sortOrder: 4 },
     { code: 'cod', name: 'Paiement à la livraison', type: 'CASH_ON_DELIVERY', availableOnline: true, availableInPos: false, sortOrder: 5 },
     { code: 'insurance', name: 'Mutuelle / Assurance', type: 'INSURANCE', availableOnline: false, availableInPos: true, sortOrder: 6 },
+    // simulated online card payment: development/demo only (never created in production)
+    ...(process.env.NODE_ENV === 'production' ? [] : [{ code: 'card_demo', name: 'Carte bancaire (démo)', type: 'ONLINE_PROVIDER', provider: 'demo', availableOnline: true, availableInPos: false, sortOrder: 7 } as const]),
   ] as const;
   for (const m of methods) await prisma.paymentMethodConfig.upsert({ where: { code: m.code }, update: {}, create: { ...m } });
   const ship = [
@@ -136,7 +138,8 @@ async function seedCommerceConfig() {
     { code: 'express', name: 'Livraison express', price: 70, estimatedDaysMin: 1, estimatedDaysMax: 1, sortOrder: 2 },
     { code: 'pickup', name: 'Retrait en magasin', price: 0, sortOrder: 3 },
   ];
-  for (const s of ship) await prisma.shippingMethod.upsert({ where: { code: s.code }, update: {}, create: s });
+  // store pickup is a fulfilment type chosen at checkout, not a delivery method
+  for (const s of ship) await prisma.shippingMethod.upsert({ where: { code: s.code }, update: s.code === 'pickup' ? { isActive: false } : {}, create: { ...s, ...(s.code === 'pickup' ? { isActive: false } : {}) } });
   await prisma.coupon.upsert({ where: { code: 'BIENVENUE10' }, update: {}, create: { code: 'BIENVENUE10', description: '10% de bienvenue', type: 'PERCENT', value: 10, minSubtotal: 300 } });
 
   const modules = ['pos', 'inventory', 'purchasing', 'workshop', 'appointments', 'hr', 'finance', 'reports', 'blog', 'storefront'];
@@ -145,7 +148,7 @@ async function seedCommerceConfig() {
   const settings: [string, string, unknown, boolean][] = [
     ['general', 'default_locale', 'fr', true], ['general', 'default_currency', 'MAD', true], ['general', 'timezone', 'Africa/Casablanca', true],
     ['general', 'units', 'metric', true], ['checkout', 'guest_checkout', true, true], ['checkout', 'prescription_required_for_lenses', true, true],
-    ['inventory', 'low_stock_alerts', true, false], ['pos', 'require_open_session', true, false], ['pos', 'min_deposit_pct', 30, false], ['pos', 'allow_negative_stock', false, false], ['workshop', 'default_days', 5, false], ['workshop', 'notify_channels', ['EMAIL', 'SMS'], false], ['invoice', 'footer', 'Merci de votre confiance — Mizmar Optique', false],
+    ['inventory', 'low_stock_alerts', true, false], ['pos', 'require_open_session', true, false], ['pos', 'min_deposit_pct', 30, false], ['pos', 'allow_negative_stock', false, false], ['workshop', 'default_days', 5, false], ['online', 'bank_transfer_instructions', 'Virement à : Mizmar Optique — RIB 000 000 0000000000000000 00. Indiquez le numéro de commande en référence.', true], ['workshop', 'notify_channels', ['EMAIL', 'SMS'], false], ['invoice', 'footer', 'Merci de votre confiance — Mizmar Optique', false],
   ];
   for (const [group, key, value, isPublic] of settings)
     await prisma.setting.upsert({ where: { scope_scopeId_key: { scope: 'GLOBAL', scopeId: 'global', key } }, update: {}, create: { group, key, value: value as any, isPublic } });
@@ -276,6 +279,8 @@ async function seedContent() {
     ['password_reset', 'en', 'Reset your password', '<p>Hello {{firstName}},</p><p>Choose a new password here: <a href="{{resetUrl}}">{{resetUrl}}</a> (valid for 1 hour).</p>'],
     ['order_confirmation', 'fr', 'Confirmation de commande {{orderNumber}}', '<p>Merci {{firstName}} ! Votre commande {{orderNumber}} a bien été reçue.</p>'],
     ['job_ready', 'fr', 'Vos lunettes sont prêtes', '<p>Bonjour {{firstName}}, vos lunettes sont prêtes à être retirées chez {{storeName}}.</p>'],
+    ['order_ready', 'fr', 'Votre commande {{orderNumber}} est prête', '<p>Bonjour {{firstName}}, votre commande {{orderNumber}} vous attend chez {{storeName}}.</p>'],
+    ['order_ready', 'en', 'Your order {{orderNumber}} is ready', '<p>Hello {{firstName}}, your order {{orderNumber}} is waiting for you at {{storeName}}.</p>'],
     ['appointment_confirmation', 'fr', 'Rendez-vous confirmé', '<p>Votre rendez-vous du {{date}} à {{time}} chez {{storeName}} est confirmé.</p>'],
   ];
   for (const [code, locale, subject, body] of tpls) await prisma.emailTemplate.upsert({ where: { code_locale: { code, locale } }, update: {}, create: { code, locale, subject, body } });
