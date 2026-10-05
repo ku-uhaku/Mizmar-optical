@@ -279,6 +279,23 @@ async function seedPeopleAndOps(stores: { id: string; code: string }[]) {
   log('customers + prescriptions, insurers, suppliers, appointment/leave types, expense categories, accounts');
 }
 
+/** Demo HR data: the four demo staff become employees with CDI contracts, plus a default commission rule and the attendance settings. */
+async function seedHr(stores: { id: string; code: string }[]) {
+  const casa = stores.find((x) => x.code === 'CASA')!.id;
+  const demo: [string, string, string, string, string, number][] = [
+    ['EMP-0001', 'manager@mizmar.local', 'Karim', 'Benali', 'Responsable magasin', 9000], ['EMP-0002', 'optician@mizmar.local', 'Salma', 'Idrissi', 'Opticienne', 8000],
+    ['EMP-0003', 'technician@mizmar.local', 'Youssef', 'Alaoui', 'Technicien atelier', 5500], ['EMP-0004', 'cashier@mizmar.local', 'Nadia', 'Tazi', 'Vendeuse', 4200],
+  ];
+  for (const [employeeNumber, email, firstName, lastName, position, salary] of demo) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    const emp = await prisma.employee.upsert({ where: { employeeNumber }, update: {}, create: { employeeNumber, userId: user?.id, storeId: casa, firstName, lastName, position, department: 'Magasin', email, hireDate: new Date('2024-01-15') } });
+    if (!(await prisma.employmentContract.count({ where: { employeeId: emp.id } }))) await prisma.employmentContract.create({ data: { employeeId: emp.id, type: 'CDI', startDate: new Date('2024-01-15'), baseSalary: salary, hoursPerWeek: 44 } });
+  }
+  await ensure(prisma.commissionRule, { name: 'Commission vendeurs 2 %' }, { scope: 'ALL', rateType: 'PERCENT', value: 2 });
+  for (const [key, value] of [['work_start', '09:00'], ['late_grace_minutes', 10]] as const) await prisma.setting.upsert({ where: { scope_scopeId_key: { scope: 'GLOBAL', scopeId: 'global', key } }, update: {}, create: { group: 'hr', key, value: value as never, isPublic: false } });
+  log('employees, contracts, commission rule, attendance settings');
+}
+
 async function seedContent() {
   const tpls: [string, string, string, string][] = [
     ['password_reset', 'fr', 'Réinitialisation de votre mot de passe', '<p>Bonjour {{firstName}},</p><p>Cliquez ici pour choisir un nouveau mot de passe : <a href="{{resetUrl}}">{{resetUrl}}</a> (valable 1 h).</p>'],
@@ -338,6 +355,7 @@ async function main() {
   await seedCommerceConfig();
   await seedCatalog();
   await seedPeopleAndOps(stores);
+  await seedHr(stores);
   await seedContent();
   console.log('Done.');
 }

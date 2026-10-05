@@ -22,7 +22,7 @@ export class DocumentsService {
   }
 
   /** The store's own default template, else a global default, else the built-in. */
-  async template(type: 'RECEIPT' | 'INVOICE' | 'QUOTE' | 'PURCHASE_ORDER' | 'JOB_ORDER', storeId: string) {
+  async template(type: 'RECEIPT' | 'INVOICE' | 'QUOTE' | 'PURCHASE_ORDER' | 'JOB_ORDER' | 'PAYSLIP', storeId: string) {
     const rows = await this.prisma.db.documentTemplate.findMany({ where: { type, isDefault: true, OR: [{ storeId }, { storeId: null }] } });
     // a template written for the old placeholder syntax ({{documentNumber}}) is ignored: it would print an empty document
     const usable = rows.filter((r) => /\{\{\s*doc\./.test(r.html));
@@ -60,6 +60,21 @@ export class DocumentsService {
       totals: { subtotal: f.money(po.subtotal), discount: '', net: f.money(po.subtotal), tax: f.money(po.taxTotal), total: f.money(po.total), paid: '', balanceDue: '' },
     };
     return { number: po.number, locale, html: renderHtml(await this.template('PURCHASE_ORDER', po.storeId), ctx) };
+  }
+
+  // ------------------------------------------------------------------ payslip
+  async payslip(id: string, user: AuthUser, locale: Locale = 'fr') {
+    const p = await this.prisma.db.payslip.findFirst({ where: { id }, include: { employee: true, run: true, lines: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } } } });
+    if (!p) throw new NotFoundException('Payslip not found');
+    if (p.employee.storeId) assertStoreAccess(user, p.employee.storeId);
+    const storeId = p.employee.storeId ?? p.run.storeId ?? (await this.prisma.db.store.findFirstOrThrow({ where: { isActive: true }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] })).id;
+    const base = await this.base(storeId, locale), f = this.fmt(locale, base.currency);
+    const period = new Intl.DateTimeFormat(locale === 'ar' ? 'ar-MA' : locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(p.run.periodStart);
+    const ctx = {
+      ...base, doc: { number: p.number }, period, employee: { name: `${p.employee.firstName} ${p.employee.lastName}`, number: p.employee.employeeNumber, position: p.employee.position ?? '', cnss: p.employee.socialSecurityNo ?? '' },
+      lines: p.lines.map((l) => ({ label: l.label, amount: f.money(l.amount) })), totals: { gross: f.money(p.gross), net: f.money(p.net) },
+    };
+    return { number: p.number, locale, html: renderHtml(await this.template('PAYSLIP', storeId), ctx) };
   }
 
   // ------------------------------------------------------------------ workshop job ticket
