@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Injectable, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
-import { CurrentUser, Permissions } from '../../common/decorators';
+import { CurrentUser, Permissions, RequiresModule } from '../../common/decorators';
 import { createCrudController } from '../../common/crud/crud.controller';
 import { SimpleCrudService } from '../../common/crud/simple-crud.service';
 import type { AuthUser } from '../../common/types';
@@ -29,7 +29,7 @@ export class CommissionRulesService extends SimpleCrudService {
 export const LeaveTypesController = createCrudController({ path: 'leave-types', tag: 'hr', module: 'hr', service: LeaveTypesService, create: D.CreateLeaveTypeDto, update: D.UpdateLeaveTypeDto });
 export const CommissionRulesController = createCrudController({ path: 'commission-rules', tag: 'hr', module: 'hr', service: CommissionRulesService, create: D.CommissionRuleDto, update: D.UpdateCommissionRuleDto });
 
-@ApiTags('hr') @ApiBearerAuth()
+@ApiTags('hr') @ApiBearerAuth() @RequiresModule('hr')
 @Controller()
 export class HrController {
   constructor(private readonly hr: HrService, private readonly comm: CommissionsService, private readonly payroll: PayrollService, private readonly docs: DocumentsService) {}

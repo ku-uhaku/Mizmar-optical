@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Injectable, OnModuleInit, Para
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Queue } from 'bullmq';
-import { AllowCustomer, CurrentUser, CustomerOnly, OptionalAuth, Permissions, Public } from '../../common/decorators';
+import { AllowCustomer, CurrentUser, CustomerOnly, OptionalAuth, Permissions, Public, RequiresModule } from '../../common/decorators';
 import { createCrudController } from '../../common/crud/crud.controller';
 import { SimpleCrudService } from '../../common/crud/simple-crud.service';
 import type { AuthUser } from '../../common/types';
@@ -22,7 +22,7 @@ export class AppointmentTypesService extends SimpleCrudService {
 export const AppointmentTypesController = createCrudController({ path: 'appointment-types', tag: 'appointments', module: 'appointments', service: AppointmentTypesService, create: D.CreateAppointmentTypeDto, update: D.UpdateAppointmentTypeDto });
 
 /** Public booking: nothing here needs an account (a signed-in customer is recognised when a token is sent). */
-@ApiTags('appointments') @Public()
+@ApiTags('appointments') @Public() @RequiresModule('appointments')
 @Controller('public/appointments')
 export class PublicAppointmentsController {
   constructor(private readonly svc: AppointmentsService, private readonly prisma: PrismaService) {}
@@ -38,7 +38,7 @@ export class PublicAppointmentsController {
   @Post('cancel') @HttpCode(200) cancel(@Body() dto: D.LookupDto) { return this.svc.cancelByContact(dto); }
 }
 
-@ApiTags('account') @ApiBearerAuth() @CustomerOnly()
+@ApiTags('account') @ApiBearerAuth() @CustomerOnly() @RequiresModule('appointments')
 @Controller('account/appointments')
 export class AccountAppointmentsController {
   constructor(private readonly svc: AppointmentsService) {}

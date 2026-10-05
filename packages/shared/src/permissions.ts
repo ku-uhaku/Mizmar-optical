@@ -22,6 +22,7 @@ export const PERMISSION_CATALOG = {
   payments: ['read', 'create', 'refund'],
   coupons: ['read', 'create', 'update', 'delete'],
   shipping: ['read', 'create', 'update', 'delete'], // delivery methods and zones
+  config: ['read', 'create', 'update', 'delete'], // languages, currencies, taxes, templates, payment methods, custom fields, modules
   suppliers: ['read', 'create', 'update', 'delete'],
   purchasing: ['read', 'create', 'update', 'receive', 'approve'],
   workshop: ['read', 'create', 'update', 'assign', 'quality_check'],
@@ -55,7 +56,7 @@ export const SYSTEM_ROLES: Record<string, { name: string; description: string; p
     name: 'Store Manager',
     description: 'Runs a store: sales, stock, staff scheduling, reports',
     permissions: ALL_PERMISSIONS.filter(
-      (p) => !['roles:', 'settings:update', 'stores:delete', 'hr:payroll'].some((x) => p.startsWith(x) || p === x),
+      (p) => !['roles:', 'settings:update', 'stores:delete', 'hr:payroll', 'config:'].some((x) => p.startsWith(x) || p === x),
     ),
   },
   optician: {

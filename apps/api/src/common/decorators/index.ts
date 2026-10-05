@@ -32,3 +32,7 @@ export const CustomerOnly = () => SetMetadata(CUSTOMER_ROUTE, 'only');
 export const OPTIONAL_AUTH = 'optionalAuth';
 /** Public route that still identifies the caller when a valid bearer token is sent (guest checkout vs signed-in checkout). */
 export const OptionalAuth = () => SetMetadata(OPTIONAL_AUTH, true);
+
+export const REQUIRES_MODULE = 'requiresModule';
+/** Route belongs to a switchable module (pos, blog, storefront…): it answers "disabled" when the dashboard has turned that module off. */
+export const RequiresModule = (key: string) => SetMetadata(REQUIRES_MODULE, key);

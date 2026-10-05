@@ -18,6 +18,10 @@ export interface CrudConfig {
   /** Query-string filters a client may use on the list endpoint (exact match). */
   filters?: string[];
   include?: object;
+  /** Normalise / validate the payload before it is written (sanitise HTML, enforce one-default rules…). Throw an HttpException to refuse. */
+  beforeSave?: (data: Record<string, any>, existing: Record<string, any> | null, prisma: PrismaService) => Promise<Record<string, any>> | Record<string, any>;
+  /** Runs after create/update/delete (e.g. clear a cache). */
+  afterChange?: () => void;
   /** Return a human reason if the row can't be deleted (e.g. still referenced). */
   inUse?: (prisma: PrismaService, id: string) => Promise<string | null>;
 }
@@ -54,12 +58,18 @@ export abstract class SimpleCrudService {
   async create(data: Record<string, any>) {
     const { slugFrom } = this.cfg;
     if (slugFrom && !data.slug) data.slug = await uniqueSlug(async (s) => !!(await this.raw.findFirst({ where: { slug: s } })), data[slugFrom], this.cfg.model);
-    return this.raw.create({ data, include: this.cfg.include });
+    if (this.cfg.beforeSave) data = await this.cfg.beforeSave(data, null, this.prisma);
+    const row = await this.raw.create({ data, include: this.cfg.include });
+    this.cfg.afterChange?.();
+    return row;
   }
 
   async update(id: string, data: Record<string, any>) {
-    await this.get(id);
-    return this.raw.update({ where: { id }, data, include: this.cfg.include });
+    const existing = await this.get(id);
+    if (this.cfg.beforeSave) data = await this.cfg.beforeSave(data, existing, this.prisma);
+    const row = await this.raw.update({ where: { id }, data, include: this.cfg.include });
+    this.cfg.afterChange?.();
+    return row;
   }
 
   async remove(id: string) {
@@ -68,5 +78,6 @@ export abstract class SimpleCrudService {
     if (reason) throw new ConflictException({ code: 'IN_USE', message: reason });
     const released = Object.fromEntries((this.cfg.unique ?? []).filter((f) => typeof row[f] === 'string').map((f) => [f, releaseUnique(row[f], id)]));
     await this.raw.update({ where: { id }, data: { deletedAt: new Date(), ...released } });
+    this.cfg.afterChange?.();
   }
 }

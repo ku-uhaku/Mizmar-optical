@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { memoryStorage } from 'multer';
-import { AllowCustomer, CurrentUser, CustomerOnly, OptionalAuth, Permissions, Public, SkipAudit } from '../../common/decorators';
+import { AllowCustomer, CurrentUser, CustomerOnly, OptionalAuth, Permissions, Public, RequiresModule, SkipAudit } from '../../common/decorators';
 import type { AuthUser } from '../../common/types';
 import { MAX_UPLOAD_BYTES } from '../media/media.service';
 import { AccountService } from './account.service';
@@ -24,7 +24,7 @@ class NoStoreInterceptor implements NestInterceptor {
 
 /** Public storefront API: catalog, cart pricing, checkout, tracking, content. Nothing here needs an account (checkout may use one). */
 @ApiTags('shop')
-@Public()
+@Public() @RequiresModule('storefront')
 @Controller('public')
 export class ShopController {
   constructor(private readonly catalog: ShopCatalogService, private readonly checkout: ShopCheckoutService, private readonly content: ShopContentService, private readonly account: AccountService) {}
@@ -36,9 +36,9 @@ export class ShopController {
   @Cached() @Get('payment-methods') paymentMethods() { return this.checkout.paymentMethods(); }
   @Cached() @Get('shipping-methods') shippingMethods() { return this.checkout.shippingMethods(); }
 
-  @Cached() @Get('blog') blog(@Query() q: D.ListBlogDto) { return this.content.blog(q); }
-  @Cached() @Get('blog-categories') blogCategories() { return this.content.blogCategories(); }
-  @Cached() @Get('blog/:slug') blogPost(@Param('slug') slug: string) { return this.content.blogPost(slug); }
+  @RequiresModule('blog') @Cached() @Get('blog') blog(@Query() q: D.ListBlogDto) { return this.content.blog(q); }
+  @RequiresModule('blog') @Cached() @Get('blog-categories') blogCategories() { return this.content.blogCategories(); }
+  @RequiresModule('blog') @Cached() @Get('blog/:slug') blogPost(@Param('slug') slug: string) { return this.content.blogPost(slug); }
   @Post('contact') @HttpCode(201) contact(@Body() dto: D.ContactMessageDto) { return this.content.contact(dto); }
   @Post('newsletter') @HttpCode(201) newsletter(@Body() dto: D.NewsletterDto) { return this.content.subscribe(dto); }
 
@@ -55,7 +55,7 @@ export class ShopController {
 
 /** The signed-in customer's own data. Staff tokens are refused (CustomerOnly); customer tokens are refused on every other route. */
 @ApiTags('account') @ApiBearerAuth()
-@CustomerOnly() @UseInterceptors(NoStoreInterceptor)
+@CustomerOnly() @RequiresModule('storefront') @UseInterceptors(NoStoreInterceptor)
 @Controller('account')
 export class AccountController {
   constructor(private readonly svc: AccountService) {}

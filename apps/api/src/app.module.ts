@@ -36,6 +36,7 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { HrModule } from './modules/hr/hr.module';
 import { FinanceModule } from './modules/finance/finance.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { AdminConfigModule } from './modules/admin-config/admin-config.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { HealthController } from './modules/health/health.controller';
 
@@ -86,6 +87,7 @@ const AUTH_ROUTES = /\/(auth\/(login|forgot-password|reset-password)|public\/aut
     HrModule,
     FinanceModule,
     ReportsModule,
+    AdminConfigModule,
   ],
   controllers: [HealthController],
   providers: [
