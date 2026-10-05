@@ -141,7 +141,7 @@ export class AuthService {
       where: { id, status: 'ACTIVE' },
       include: {
         roles: { where: { deletedAt: null, role: { deletedAt: null } }, include: { role: { include: { permissions: { where: { deletedAt: null }, include: { permission: true } } } } } },
-        stores: { where: { deletedAt: null, store: { deletedAt: null, isActive: true } } },
+        stores: { where: { deletedAt: null, store: { deletedAt: null, isActive: true } }, include: { store: { select: { id: true, code: true, name: true } } } },
       },
     });
     if (!user) return null;
@@ -158,6 +158,7 @@ export class AuthService {
       roles: user.roles.map((r) => r.role.code),
       permissions: [...permissions].sort(),
       storeIds: user.stores.map((s) => s.storeId),
+      stores: user.stores.map((s) => s.store),
       defaultStoreId: defaultStore?.storeId ?? null,
     };
   }

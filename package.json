@@ -2,11 +2,13 @@
   "name": "mizmar-optical",
   "private": true,
   "packageManager": "pnpm@12.9.1",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint",
+    "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "db:migrate": "pnpm --filter @mizmar/api db:migrate",
@@ -14,11 +16,16 @@
     "db:studio": "pnpm --filter @mizmar/api db:studio",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs -f"
+    "infra:logs": "docker compose logs -f",
+    "prepare": "pnpm --filter @mizmar/shared build && pnpm --filter @mizmar/api db:generate"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.6.0",
     "turbo": "^2.11.7",
     "typescript": "^5.9.0",
-    "prettier": "^3.6.0"
+    "typescript-eslint": "^8.71.0"
   }
 }

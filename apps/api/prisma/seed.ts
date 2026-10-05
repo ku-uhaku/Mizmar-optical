@@ -163,7 +163,7 @@ async function seedCommerceConfig() {
   log('payment/shipping methods, coupon, module toggles, settings, branding');
 }
 
-async function seedCatalog(stores: { id: string; code: string }[]) {
+async function seedCatalog() {
   const brands = ['Ray-Ban', 'Oakley', 'Persol', 'Gucci', 'Essilor', 'Acuvue'];
   const brandMap: Record<string, string> = {};
   for (const [i, name] of brands.entries()) {
@@ -314,7 +314,7 @@ async function main() {
   const stores = await seedStores();
   await seedUsers(stores);
   await seedCommerceConfig();
-  await seedCatalog(stores);
+  await seedCatalog();
   await seedPeopleAndOps(stores);
   await seedContent();
   console.log('Done.');

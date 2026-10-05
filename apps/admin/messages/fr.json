@@ -1,0 +1,88 @@
+{
+  "common": {
+    "search": "Rechercher…",
+    "loading": "Chargement…",
+    "empty": "Aucun résultat",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {page} sur {total}",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "forbidden": "Vous n'avez pas accès à cette page.",
+    "logout": "Déconnexion",
+    "theme": "Thème",
+    "language": "Langue",
+    "store": "Magasin",
+    "invalidField": "Champ invalide"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "users": "Utilisateurs",
+    "roles": "Rôles",
+    "stores": "Magasins",
+    "audit": "Journal d'audit"
+  },
+  "auth": {
+    "title": "Mizmar Optique",
+    "subtitle": "Connectez-vous à l'espace d'administration",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "invalid": "E-mail ou mot de passe incorrect",
+    "locked": "Compte temporairement verrouillé. Réessayez plus tard.",
+    "emailInvalid": "E-mail invalide",
+    "passwordShort": "8 caractères minimum"
+  },
+  "dashboard": {
+    "welcome": "Bonjour, {name}",
+    "subtitle": "Voici un aperçu de votre accès.",
+    "roles": "Vos rôles",
+    "stores": "Vos magasins",
+    "permissions": "Permissions",
+    "superAdmin": "Accès complet (super admin)"
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "new": "Nouvel utilisateur",
+    "newHint": "Créez un compte pour un membre de l'équipe.",
+    "name": "Nom",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "role": "Rôle",
+    "roles": "Rôles",
+    "store": "Magasin",
+    "stores": "Magasins",
+    "created": "Utilisateur créé",
+    "deleted": "Utilisateur supprimé",
+    "emailTaken": "Cet e-mail est déjà utilisé",
+    "confirmDelete": "Supprimer {name} ?"
+  },
+  "stores": {
+    "title": "Magasins",
+    "code": "Code",
+    "name": "Nom",
+    "city": "Ville",
+    "phone": "Téléphone"
+  },
+  "roles": {
+    "title": "Rôles & permissions",
+    "name": "Rôle",
+    "type": "Type",
+    "system": "Système",
+    "custom": "Personnalisé",
+    "permissions": "Permissions",
+    "users": "Utilisateurs"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "when": "Date",
+    "action": "Action",
+    "entity": "Élément",
+    "ip": "Adresse IP"
+  }
+}

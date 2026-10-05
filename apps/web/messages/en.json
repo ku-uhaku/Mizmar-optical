@@ -1,0 +1,27 @@
+{
+  "common": {
+    "language": "Language",
+    "theme": "Theme",
+    "cart": "Cart"
+  },
+  "home": {
+    "discover": "Discover"
+  },
+  "footer": {
+    "information": "Information",
+    "stores": "Our stores",
+    "ourStores": "Our stores"
+  },
+  "stores": {
+    "title": "Our stores",
+    "days": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
+    }
+  }
+}

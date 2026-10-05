@@ -8,6 +8,7 @@ export interface AuthUser {
   roles: string[]; // role codes
   permissions: string[]; // effective `module:action` keys (empty for super admin; bypassed)
   storeIds: string[];
+  stores: { id: string; code: string; name: string }[];
   defaultStoreId: string | null;
 }
 

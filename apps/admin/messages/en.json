@@ -1,0 +1,88 @@
+{
+  "common": {
+    "search": "Search…",
+    "loading": "Loading…",
+    "empty": "No results",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {total}",
+    "save": "Save",
+    "delete": "Delete",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "forbidden": "You don't have access to this page.",
+    "logout": "Log out",
+    "theme": "Theme",
+    "language": "Language",
+    "store": "Store",
+    "invalidField": "Invalid field"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "roles": "Roles",
+    "stores": "Stores",
+    "audit": "Audit log"
+  },
+  "auth": {
+    "title": "Mizmar Optique",
+    "subtitle": "Sign in to the admin area",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalid": "Incorrect email or password",
+    "locked": "Account temporarily locked. Try again later.",
+    "emailInvalid": "Invalid email",
+    "passwordShort": "At least 8 characters"
+  },
+  "dashboard": {
+    "welcome": "Hello, {name}",
+    "subtitle": "Here is an overview of your access.",
+    "roles": "Your roles",
+    "stores": "Your stores",
+    "permissions": "Permissions",
+    "superAdmin": "Full access (super admin)"
+  },
+  "users": {
+    "title": "Users",
+    "new": "New user",
+    "newHint": "Create an account for a team member.",
+    "name": "Name",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "roles": "Roles",
+    "store": "Store",
+    "stores": "Stores",
+    "created": "User created",
+    "deleted": "User deleted",
+    "emailTaken": "This email is already in use",
+    "confirmDelete": "Delete {name}?"
+  },
+  "stores": {
+    "title": "Stores",
+    "code": "Code",
+    "name": "Name",
+    "city": "City",
+    "phone": "Phone"
+  },
+  "roles": {
+    "title": "Roles & permissions",
+    "name": "Role",
+    "type": "Type",
+    "system": "System",
+    "custom": "Custom",
+    "permissions": "Permissions",
+    "users": "Users"
+  },
+  "audit": {
+    "title": "Audit log",
+    "when": "When",
+    "action": "Action",
+    "entity": "Entity",
+    "ip": "IP address"
+  }
+}

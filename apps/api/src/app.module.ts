@@ -19,6 +19,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { StorefrontModule } from './modules/storefront/storefront.module';
 import { HealthController } from './modules/health/health.controller';
 
 const AUTH_ROUTES = /\/auth\/(login|refresh|forgot-password|reset-password)/;
@@ -46,6 +47,7 @@ const AUTH_ROUTES = /\/auth\/(login|refresh|forgot-password|reset-password)/;
     StoresModule,
     SettingsModule,
     AuditModule,
+    StorefrontModule,
   ],
   controllers: [HealthController],
   providers: [

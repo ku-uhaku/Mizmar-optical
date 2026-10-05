@@ -1,0 +1,27 @@
+{
+  "common": {
+    "language": "Langue",
+    "theme": "Thème",
+    "cart": "Panier"
+  },
+  "home": {
+    "discover": "Découvrir"
+  },
+  "footer": {
+    "information": "Informations",
+    "stores": "Nos magasins",
+    "ourStores": "Nos magasins"
+  },
+  "stores": {
+    "title": "Nos magasins",
+    "days": {
+      "mon": "Lundi",
+      "tue": "Mardi",
+      "wed": "Mercredi",
+      "thu": "Jeudi",
+      "fri": "Vendredi",
+      "sat": "Samedi",
+      "sun": "Dimanche"
+    }
+  }
+}
