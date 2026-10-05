@@ -1,0 +1,618 @@
+// ============================================================================
+// 5. SALES, PAYMENTS & PROMOTIONS
+// ============================================================================
+
+enum OrderChannel {
+  ONLINE
+  POS
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  PROCESSING
+  READY
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+/// Payment state of an order (derived from its Payment rows).
+enum OrderPaymentStatus {
+  UNPAID
+  PARTIAL // deposit paid, balance remaining
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum FulfillmentType {
+  IN_STORE
+  PICKUP
+  DELIVERY
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  APPLIED
+  VOID
+}
+
+enum PaymentMethodType {
+  CASH
+  CARD
+  BANK_TRANSFER
+  CHEQUE
+  CASH_ON_DELIVERY
+  ONLINE_PROVIDER
+  INSURANCE
+  STORE_CREDIT
+  OTHER
+}
+
+enum PaymentKind {
+  PAYMENT
+  DEPOSIT
+  REFUND
+}
+
+enum PaymentTxStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  RECEIVED
+  REFUNDED
+  REJECTED
+}
+
+enum ItemCondition {
+  NEW
+  OPENED
+  DAMAGED
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+  FREE_SHIPPING
+}
+
+enum ShipmentStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+}
+
+model TaxRate {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  name        String
+  rate        Decimal     @db.Decimal(5, 2) // percent
+  isInclusive Boolean     @default(true) // prices already include this tax
+  isDefault   Boolean     @default(false)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  orderLines  OrderLine[]
+}
+
+/// Pluggable payment methods (cash, card, COD, online providers). Shown per channel.
+model PaymentMethodConfig {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  name            String
+  type            PaymentMethodType
+  provider        String? // "stripe" | "cmi" | "paypal" | ...
+  config          Json? // non-secret provider settings; secrets live in env/secret store
+  availableOnline Boolean           @default(false)
+  availableInPos  Boolean           @default(true)
+  feePct          Decimal?          @db.Decimal(5, 2)
+  isActive        Boolean           @default(true)
+  sortOrder       Int               @default(0)
+  translations    Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  payments Payment[]
+}
+
+model ShippingMethod {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  name             String
+  description      String?
+  price            Decimal   @default(0) @db.Decimal(12, 2)
+  freeOverAmount   Decimal?  @db.Decimal(12, 2)
+  estimatedDaysMin Int?
+  estimatedDaysMax Int?
+  zones            Json? // cities / regions served
+  isActive         Boolean   @default(true)
+  sortOrder        Int       @default(0)
+  translations     Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  orders           Order[]
+}
+
+model Coupon {
+  id               String     @id @default(cuid())
+  code             String     @unique
+  description      String?
+  type             CouponType
+  value            Decimal    @default(0) @db.Decimal(12, 2)
+  minSubtotal      Decimal?   @db.Decimal(12, 2)
+  maxDiscount      Decimal?   @db.Decimal(12, 2)
+  usageLimit       Int?
+  perCustomerLimit Int?
+  usedCount        Int        @default(0)
+  startsAt         DateTime?
+  endsAt           DateTime?
+  appliesTo        Json? // { categoryIds, brandIds, productIds }
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  redemptions CouponRedemption[]
+  orders      Order[]
+}
+
+model Order {
+  id               String             @id @default(cuid())
+  storeId          String
+  number           String
+  channel          OrderChannel
+  status           OrderStatus        @default(PENDING)
+  paymentStatus    OrderPaymentStatus @default(UNPAID)
+  fulfillment      FulfillmentType    @default(IN_STORE)
+  customerId       String?
+  cashierId        String? // staff user who rang up the POS sale
+  cashSessionId    String?
+  couponId         String?
+  shippingMethodId String?
+  currency         String             @default("MAD")
+  subtotal         Decimal            @default(0) @db.Decimal(12, 2)
+  discountTotal    Decimal            @default(0) @db.Decimal(12, 2)
+  taxTotal         Decimal            @default(0) @db.Decimal(12, 2)
+  shippingTotal    Decimal            @default(0) @db.Decimal(12, 2)
+  total            Decimal            @default(0) @db.Decimal(12, 2)
+  paidTotal        Decimal            @default(0) @db.Decimal(12, 2)
+  /// total - paidTotal; > 0 for prescription orders awaiting the remaining balance.
+  balanceDue       Decimal            @default(0) @db.Decimal(12, 2)
+  shippingAddress  Json?
+  billingAddress   Json?
+  customerNote     String?
+  internalNote     String?
+  placedAt         DateTime?
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  cancelReason     String?
+  createdById      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  deletedAt        DateTime?
+
+  customer       Customer?          @relation(fields: [customerId], references: [id])
+  coupon         Coupon?            @relation(fields: [couponId], references: [id])
+  shippingMethod ShippingMethod?    @relation(fields: [shippingMethodId], references: [id])
+  cashSession    CashSession?       @relation(fields: [cashSessionId], references: [id])
+  lines          OrderLine[]
+  payments       Payment[]
+  invoices       Invoice[]
+  returns        Return[]
+  shipments      Shipment[]
+  refunds        Refund[]
+  redemptions    CouponRedemption[]
+  jobOrders      JobOrder[]
+
+  @@unique([storeId, number])
+  @@index([storeId, status])
+  @@index([storeId, channel, createdAt])
+  @@index([customerId])
+  @@index([paymentStatus])
+  @@index([cashSessionId])
+}
+
+model OrderLine {
+  id          String    @id @default(cuid())
+  orderId     String
+  variantId   String?
+  lensEntryId String?
+  sku         String?
+  description String
+  quantity    Int       @default(1)
+  unitPrice   Decimal   @db.Decimal(12, 2)
+  unitCost    Decimal?  @db.Decimal(12, 2) // snapshot, for profit reports
+  discount    Decimal   @default(0) @db.Decimal(12, 2)
+  taxRateId   String?
+  taxRatePct  Decimal?  @db.Decimal(5, 2) // snapshot
+  taxAmount   Decimal   @default(0) @db.Decimal(12, 2)
+  lineTotal   Decimal   @db.Decimal(12, 2)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  order       Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant     ProductVariant?      @relation(fields: [variantId], references: [id])
+  lensEntry   LensCatalogEntry?    @relation(fields: [lensEntryId], references: [id])
+  taxRate     TaxRate?             @relation(fields: [taxRateId], references: [id])
+  lensConfig  OrderLineLensConfig?
+  returnLines ReturnLine[]
+  jobOrders   JobOrder[]
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+/// Lens configuration chosen for a frame line (configurator or POS). Snapshots keep
+/// history stable if the prescription or catalog prices change later.
+model OrderLineLensConfig {
+  id                   String    @id @default(cuid())
+  orderLineId          String    @unique
+  lensTypeId           String?
+  lensEntryId          String?
+  prescriptionId       String?
+  prescriptionSnapshot Json?
+  lensPrice            Decimal   @default(0) @db.Decimal(12, 2)
+  treatmentsPrice      Decimal   @default(0) @db.Decimal(12, 2)
+  notes                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?
+
+  orderLine    OrderLine                @relation(fields: [orderLineId], references: [id], onDelete: Cascade)
+  lensType     LensType?                @relation(fields: [lensTypeId], references: [id])
+  prescription Prescription?            @relation(fields: [prescriptionId], references: [id])
+  treatments   OrderLineLensTreatment[]
+
+  @@index([prescriptionId])
+}
+
+model OrderLineLensTreatment {
+  id          String    @id @default(cuid())
+  configId    String
+  treatmentId String
+  name        String // snapshot
+  price       Decimal   @db.Decimal(12, 2) // snapshot
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  config    OrderLineLensConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  treatment LensTreatment       @relation(fields: [treatmentId], references: [id])
+
+  @@unique([configId, treatmentId])
+  @@index([treatmentId])
+}
+
+model Quote {
+  id               String      @id @default(cuid())
+  storeId          String
+  number           String
+  customerId       String?
+  status           QuoteStatus @default(DRAFT)
+  validUntil       DateTime?   @db.Date
+  subtotal         Decimal     @default(0) @db.Decimal(12, 2)
+  discountTotal    Decimal     @default(0) @db.Decimal(12, 2)
+  taxTotal         Decimal     @default(0) @db.Decimal(12, 2)
+  total            Decimal     @default(0) @db.Decimal(12, 2)
+  convertedOrderId String?
+  notes            String?
+  createdById      String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  lines    QuoteLine[]
+
+  @@unique([storeId, number])
+  @@index([storeId, status])
+  @@index([customerId])
+}
+
+model QuoteLine {
+  id          String    @id @default(cuid())
+  quoteId     String
+  variantId   String?
+  description String
+  quantity    Int       @default(1)
+  unitPrice   Decimal   @db.Decimal(12, 2)
+  discount    Decimal   @default(0) @db.Decimal(12, 2)
+  taxRatePct  Decimal?  @db.Decimal(5, 2)
+  taxAmount   Decimal   @default(0) @db.Decimal(12, 2)
+  lineTotal   Decimal   @db.Decimal(12, 2)
+  lensConfig  Json? // lens type / treatments / prescription draft
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  quote   Quote           @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([quoteId])
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  storeId         String
+  number          String
+  orderId         String?
+  customerId      String?
+  status          InvoiceStatus @default(DRAFT)
+  issuedAt        DateTime?
+  dueAt           DateTime?
+  subtotal        Decimal       @default(0) @db.Decimal(12, 2)
+  discountTotal   Decimal       @default(0) @db.Decimal(12, 2)
+  taxTotal        Decimal       @default(0) @db.Decimal(12, 2)
+  total           Decimal       @default(0) @db.Decimal(12, 2)
+  paidTotal       Decimal       @default(0) @db.Decimal(12, 2)
+  billingSnapshot Json? // customer + store legal info at issue time
+  templateId      String?
+  pdfUrl          String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  order       Order?            @relation(fields: [orderId], references: [id])
+  customer    Customer?         @relation(fields: [customerId], references: [id])
+  template    DocumentTemplate? @relation(fields: [templateId], references: [id])
+  lines       InvoiceLine[]
+  payments    Payment[]
+  creditNotes CreditNote[]
+
+  @@unique([storeId, number])
+  @@index([storeId, status])
+  @@index([orderId])
+  @@index([customerId])
+}
+
+model InvoiceLine {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int       @default(1)
+  unitPrice   Decimal   @db.Decimal(12, 2)
+  discount    Decimal   @default(0) @db.Decimal(12, 2)
+  taxRatePct  Decimal?  @db.Decimal(5, 2)
+  taxAmount   Decimal   @default(0) @db.Decimal(12, 2)
+  lineTotal   Decimal   @db.Decimal(12, 2)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model CreditNote {
+  id         String           @id @default(cuid())
+  storeId    String
+  number     String
+  invoiceId  String?
+  returnId   String?
+  customerId String?
+  status     CreditNoteStatus @default(DRAFT)
+  reason     String?
+  subtotal   Decimal          @default(0) @db.Decimal(12, 2)
+  taxTotal   Decimal          @default(0) @db.Decimal(12, 2)
+  total      Decimal          @default(0) @db.Decimal(12, 2)
+  issuedAt   DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+
+  invoice  Invoice?         @relation(fields: [invoiceId], references: [id])
+  return   Return?          @relation(fields: [returnId], references: [id])
+  customer Customer?        @relation(fields: [customerId], references: [id])
+  lines    CreditNoteLine[]
+
+  @@unique([storeId, number])
+  @@index([invoiceId])
+  @@index([returnId])
+  @@index([customerId])
+}
+
+model CreditNoteLine {
+  id           String    @id @default(cuid())
+  creditNoteId String
+  description  String
+  quantity     Int       @default(1)
+  unitPrice    Decimal   @db.Decimal(12, 2)
+  taxRatePct   Decimal?  @db.Decimal(5, 2)
+  taxAmount    Decimal   @default(0) @db.Decimal(12, 2)
+  lineTotal    Decimal   @db.Decimal(12, 2)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  creditNote CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+
+  @@index([creditNoteId])
+}
+
+/// Money movement tied to an order and/or invoice. Deposits are `kind = DEPOSIT`.
+model Payment {
+  id                    String          @id @default(cuid())
+  storeId               String
+  orderId               String?
+  invoiceId             String?
+  customerId            String?
+  methodId              String
+  kind                  PaymentKind     @default(PAYMENT)
+  status                PaymentTxStatus @default(CAPTURED)
+  amount                Decimal         @db.Decimal(12, 2)
+  currency              String          @default("MAD")
+  reference             String? // cheque no., card slip, bank ref
+  providerTransactionId String?
+  providerPayload       Json?
+  cashSessionId         String?
+  receivedById          String?
+  paidAt                DateTime        @default(now())
+  note                  String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  deletedAt             DateTime?
+
+  order       Order?              @relation(fields: [orderId], references: [id])
+  invoice     Invoice?            @relation(fields: [invoiceId], references: [id])
+  customer    Customer?           @relation(fields: [customerId], references: [id])
+  method      PaymentMethodConfig @relation(fields: [methodId], references: [id])
+  cashSession CashSession?        @relation(fields: [cashSessionId], references: [id])
+  refunds     Refund[]
+
+  @@index([storeId, paidAt])
+  @@index([orderId])
+  @@index([invoiceId])
+  @@index([methodId])
+  @@index([cashSessionId])
+  @@index([providerTransactionId])
+}
+
+model Return {
+  id            String       @id @default(cuid())
+  storeId       String
+  number        String
+  orderId       String
+  customerId    String?
+  status        ReturnStatus @default(REQUESTED)
+  reason        String?
+  refundTotal   Decimal      @default(0) @db.Decimal(12, 2)
+  processedById String?
+  processedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  order       Order        @relation(fields: [orderId], references: [id])
+  customer    Customer?    @relation(fields: [customerId], references: [id])
+  lines       ReturnLine[]
+  refunds     Refund[]
+  creditNotes CreditNote[]
+
+  @@unique([storeId, number])
+  @@index([orderId])
+  @@index([status])
+}
+
+model ReturnLine {
+  id           String        @id @default(cuid())
+  returnId     String
+  orderLineId  String
+  quantity     Int
+  condition    ItemCondition @default(NEW)
+  restock      Boolean       @default(true)
+  refundAmount Decimal       @db.Decimal(12, 2)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  return    Return    @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderLine OrderLine @relation(fields: [orderLineId], references: [id])
+
+  @@index([returnId])
+  @@index([orderLineId])
+}
+
+model Refund {
+  id            String          @id @default(cuid())
+  storeId       String
+  orderId       String
+  returnId      String?
+  paymentId     String? // original payment being refunded
+  methodId      String?
+  amount        Decimal         @db.Decimal(12, 2)
+  status        PaymentTxStatus @default(CAPTURED)
+  reference     String?
+  reason        String?
+  processedById String?
+  refundedAt    DateTime        @default(now())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  return  Return?  @relation(fields: [returnId], references: [id])
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  @@index([orderId])
+  @@index([returnId])
+  @@index([paymentId])
+  @@index([storeId, refundedAt])
+}
+
+model CouponRedemption {
+  id         String    @id @default(cuid())
+  couponId   String
+  orderId    String
+  customerId String?
+  amount     Decimal   @db.Decimal(12, 2)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id])
+
+  @@index([couponId])
+  @@index([orderId])
+  @@index([customerId])
+}
+
+model Shipment {
+  id               String         @id @default(cuid())
+  orderId          String
+  shippingMethodId String?
+  carrier          String?
+  trackingNumber   String?
+  trackingUrl      String?
+  status           ShipmentStatus @default(PENDING)
+  address          Json?
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([trackingNumber])
+}

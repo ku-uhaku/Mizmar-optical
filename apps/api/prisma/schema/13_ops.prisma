@@ -1,0 +1,75 @@
+// ============================================================================
+// 13. OPERATIONS (notifications, outbox, scheduled jobs)
+// ============================================================================
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model Notification {
+  id         String              @id @default(cuid())
+  userId     String?
+  customerId String?
+  channel    NotificationChannel
+  type       String // job_ready | order_confirmed | appointment_reminder | low_stock ...
+  title      String?
+  body       String
+  data       Json?
+  status     NotificationStatus  @default(PENDING)
+  jobId      String? // BullMQ job id
+  error      String?
+  sentAt     DateTime?
+  readAt     DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  deletedAt  DateTime?
+
+  @@index([userId, status])
+  @@index([customerId])
+  @@index([channel, status])
+}
+
+/// Transactional outbox: written in the same DB transaction as the business change,
+/// then relayed to BullMQ, so emails/SMS are never lost or sent for rolled-back work.
+model OutboxMessage {
+  id          String       @id @default(cuid())
+  queue       String
+  payload     Json
+  dedupeKey   String?      @unique
+  status      OutboxStatus @default(PENDING)
+  attempts    Int          @default(0)
+  availableAt DateTime     @default(now())
+  processedAt DateTime?
+  lastError   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  @@index([status, availableAt])
+}
+
+model ScheduledJobLog {
+  id         String    @id @default(cuid())
+  jobName    String
+  status     String // SUCCESS | FAILED
+  startedAt  DateTime
+  finishedAt DateTime?
+  durationMs Int?
+  result     Json?
+  error      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([jobName, startedAt])
+}

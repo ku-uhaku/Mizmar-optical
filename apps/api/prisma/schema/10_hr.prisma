@@ -1,0 +1,297 @@
+// ============================================================================
+// 10. HUMAN RESOURCES
+// ============================================================================
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum ContractType {
+  CDI
+  CDD
+  ANAPEC
+  INTERNSHIP
+  FREELANCE
+}
+
+enum SalaryPeriod {
+  MONTHLY
+  HOURLY
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  LEAVE
+  HOLIDAY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum CommissionRateType {
+  PERCENT
+  FIXED
+}
+
+enum CommissionScope {
+  ALL
+  CATEGORY
+  BRAND
+  PRODUCT_TYPE
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  VOID
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+enum PayslipLineKind {
+  EARNING
+  DEDUCTION
+  CONTRIBUTION
+  TAX
+}
+
+model Employee {
+  id               String         @id @default(cuid())
+  userId           String?        @unique
+  storeId          String?
+  managerId        String?
+  employeeNumber   String         @unique
+  firstName        String
+  lastName         String
+  nationalId       String?
+  socialSecurityNo String? // CNSS
+  birthDate        DateTime?      @db.Date
+  hireDate         DateTime?      @db.Date
+  terminationDate  DateTime?      @db.Date
+  position         String?
+  department       String?
+  phone            String?
+  email            String?
+  address          String?
+  bankIban         String?
+  status           EmployeeStatus @default(ACTIVE)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  user        User?                @relation(fields: [userId], references: [id])
+  manager     Employee?            @relation("EmployeeManager", fields: [managerId], references: [id])
+  reports     Employee[]           @relation("EmployeeManager")
+  contracts   EmploymentContract[]
+  attendance  AttendanceRecord[]
+  leaves      LeaveRequest[]
+  commissions CommissionEntry[]
+  payslips    Payslip[]
+
+  @@index([storeId, status])
+  @@index([lastName, firstName])
+}
+
+model EmploymentContract {
+  id           String       @id @default(cuid())
+  employeeId   String
+  type         ContractType
+  startDate    DateTime     @db.Date
+  endDate      DateTime?    @db.Date
+  baseSalary   Decimal      @db.Decimal(12, 2)
+  salaryPeriod SalaryPeriod @default(MONTHLY)
+  hoursPerWeek Decimal?     @db.Decimal(4, 1)
+  probationEnd DateTime?    @db.Date
+  documentUrl  String?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, isActive])
+}
+
+model AttendanceRecord {
+  id            String           @id @default(cuid())
+  employeeId    String
+  storeId       String?
+  date          DateTime         @db.Date
+  checkIn       DateTime?
+  checkOut      DateTime?
+  breakMinutes  Int              @default(0)
+  workedMinutes Int?
+  status        AttendanceStatus @default(PRESENT)
+  note          String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@index([storeId, date])
+}
+
+model LeaveType {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  name             String
+  isPaid           Boolean   @default(true)
+  annualDays       Decimal?  @db.Decimal(5, 1)
+  requiresApproval Boolean   @default(true)
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  requests LeaveRequest[]
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  employeeId   String
+  leaveTypeId  String
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  days         Decimal     @db.Decimal(5, 1)
+  status       LeaveStatus @default(PENDING)
+  reason       String?
+  decidedById  String?
+  decidedAt    DateTime?
+  decisionNote String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@index([employeeId, status])
+  @@index([startDate, endDate])
+}
+
+model CommissionRule {
+  id          String             @id @default(cuid())
+  name        String
+  scope       CommissionScope    @default(ALL)
+  categoryId  String?
+  brandId     String?
+  productType ProductType?
+  rateType    CommissionRateType @default(PERCENT)
+  value       Decimal            @db.Decimal(12, 2)
+  minSale     Decimal?           @db.Decimal(12, 2)
+  startsAt    DateTime?          @db.Date
+  endsAt      DateTime?          @db.Date
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  deletedAt   DateTime?
+
+  entries CommissionEntry[]
+}
+
+model CommissionEntry {
+  id         String           @id @default(cuid())
+  employeeId String
+  ruleId     String?
+  orderId    String?
+  payslipId  String?
+  baseAmount Decimal          @db.Decimal(12, 2)
+  amount     Decimal          @db.Decimal(12, 2)
+  status     CommissionStatus @default(PENDING)
+  periodKey  String // "2026-10"
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+
+  employee Employee        @relation(fields: [employeeId], references: [id])
+  rule     CommissionRule? @relation(fields: [ruleId], references: [id])
+  payslip  Payslip?        @relation(fields: [payslipId], references: [id])
+
+  @@index([employeeId, periodKey])
+  @@index([orderId])
+  @@index([status])
+}
+
+model PayrollRun {
+  id           String        @id @default(cuid())
+  storeId      String?
+  periodKey    String // "2026-10"
+  periodStart  DateTime      @db.Date
+  periodEnd    DateTime      @db.Date
+  status       PayrollStatus @default(DRAFT)
+  totalGross   Decimal       @default(0) @db.Decimal(14, 2)
+  totalNet     Decimal       @default(0) @db.Decimal(14, 2)
+  approvedById String?
+  approvedAt   DateTime?
+  paidAt       DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  payslips Payslip[]
+
+  @@index([periodKey])
+  @@index([storeId, status])
+}
+
+model Payslip {
+  id            String        @id @default(cuid())
+  runId         String
+  employeeId    String
+  number        String
+  baseSalary    Decimal       @default(0) @db.Decimal(12, 2)
+  commissions   Decimal       @default(0) @db.Decimal(12, 2)
+  bonuses       Decimal       @default(0) @db.Decimal(12, 2)
+  overtime      Decimal       @default(0) @db.Decimal(12, 2)
+  deductions    Decimal       @default(0) @db.Decimal(12, 2)
+  socialContrib Decimal       @default(0) @db.Decimal(12, 2)
+  incomeTax     Decimal       @default(0) @db.Decimal(12, 2)
+  gross         Decimal       @default(0) @db.Decimal(12, 2)
+  net           Decimal       @default(0) @db.Decimal(12, 2)
+  status        PayrollStatus @default(DRAFT)
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  run               PayrollRun        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  employee          Employee          @relation(fields: [employeeId], references: [id])
+  lines             PayslipLine[]
+  commissionEntries CommissionEntry[]
+
+  @@unique([runId, employeeId])
+  @@unique([number])
+  @@index([employeeId])
+}
+
+model PayslipLine {
+  id        String          @id @default(cuid())
+  payslipId String
+  kind      PayslipLineKind
+  label     String
+  amount    Decimal         @db.Decimal(12, 2)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  deletedAt DateTime?
+
+  payslip Payslip @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+
+  @@index([payslipId])
+}

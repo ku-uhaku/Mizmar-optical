@@ -1,0 +1,305 @@
+// ============================================================================
+// 12. STOREFRONT CONTENT, BRANDING & TEMPLATES
+// ============================================================================
+
+enum MenuItemType {
+  URL
+  PAGE
+  CATEGORY
+  BRAND
+  PRODUCT
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum HomeSectionType {
+  HERO_BANNER
+  BANNER_GRID
+  FEATURED_PRODUCTS
+  NEW_ARRIVALS
+  BRANDS
+  CATEGORIES
+  PROMO
+  TESTIMONIALS
+  STORES
+  BLOG_LATEST
+  RICH_TEXT
+  NEWSLETTER
+}
+
+enum BannerPlacement {
+  HOME_HERO
+  HOME_SECONDARY
+  CATALOG_TOP
+  CHECKOUT
+  POPUP
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  REPLIED
+  SPAM
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  WHATSAPP
+  PUSH
+}
+
+model Menu {
+  id        String    @id @default(cuid())
+  code      String    @unique // header | footer | footer_legal
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  items MenuItem[]
+}
+
+model MenuItem {
+  id           String       @id @default(cuid())
+  menuId       String
+  parentId     String?
+  type         MenuItemType @default(URL)
+  label        String
+  url          String?
+  targetId     String? // page / category / brand / product id
+  openInNewTab Boolean      @default(false)
+  sortOrder    Int          @default(0)
+  isActive     Boolean      @default(true)
+  translations Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  menu     Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent   MenuItem?  @relation("MenuTree", fields: [parentId], references: [id])
+  children MenuItem[] @relation("MenuTree")
+
+  @@index([menuId, sortOrder])
+  @@index([parentId])
+}
+
+model CmsPage {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  content        String // sanitized HTML / rich text
+  status         PublishStatus @default(DRAFT)
+  template       String        @default("default")
+  showInFooter   Boolean       @default(false)
+  seoTitle       String?
+  seoDescription String?
+  translations   Json?
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  @@index([status])
+}
+
+/// Ordered, typed blocks that compose the storefront home page.
+model HomeSection {
+  id           String          @id @default(cuid())
+  type         HomeSectionType
+  title        String?
+  subtitle     String?
+  config       Json            @default("{}") // per-type settings: product ids, banner ids, limits, layout...
+  sortOrder    Int             @default(0)
+  isActive     Boolean         @default(true)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  translations Json?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+
+  @@index([isActive, sortOrder])
+}
+
+model Banner {
+  id             String          @id @default(cuid())
+  placement      BannerPlacement
+  title          String?
+  subtitle       String?
+  imageUrl       String
+  mobileImageUrl String?
+  linkUrl        String?
+  ctaLabel       String?
+  sortOrder      Int             @default(0)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  isActive       Boolean         @default(true)
+  translations   Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  @@index([placement, isActive, sortOrder])
+}
+
+model Testimonial {
+  id           String    @id @default(cuid())
+  authorName   String
+  authorTitle  String?
+  avatarUrl    String?
+  content      String
+  rating       Int       @default(5)
+  sortOrder    Int       @default(0)
+  isActive     Boolean   @default(true)
+  translations Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([isActive, sortOrder])
+}
+
+model BlogCategory {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  translations Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  posts BlogPost[]
+}
+
+model BlogPost {
+  id             String        @id @default(cuid())
+  categoryId     String?
+  authorId       String?
+  title          String
+  slug           String        @unique
+  excerpt        String?
+  content        String
+  coverUrl       String?
+  tags           String[]
+  status         PublishStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  translations   Json?
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  category BlogCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  locale         String    @default("fr")
+  isActive       Boolean   @default(true)
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+}
+
+model ContactMessage {
+  id          String               @id @default(cuid())
+  storeId     String?
+  name        String
+  email       String
+  phone       String?
+  subject     String?
+  message     String
+  status      ContactMessageStatus @default(NEW)
+  handledById String?
+  repliedAt   DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  deletedAt   DateTime?
+
+  @@index([status, createdAt])
+}
+
+/// Single-row table (key = "default") holding the white-label brand identity.
+model BrandingSetting {
+  id           String    @id @default(cuid())
+  key          String    @unique @default("default")
+  storeName    String
+  tagline      String?
+  logoUrl      String?
+  logoDarkUrl  String?
+  faviconUrl   String?
+  colors       Json // { primary, secondary, accent, background, foreground, ... } light + dark
+  fonts        Json // { heading, body }
+  social       Json? // { facebook, instagram, whatsapp, ... }
+  contact      Json? // public phone / email / address
+  legal        Json? // company legal name, ICE, RC, IF, patente (printed on invoices)
+  translations Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+model EmailTemplate {
+  id        String    @id @default(cuid())
+  code      String // order_confirmation | job_ready | password_reset | appointment_reminder ...
+  locale    String    @default("fr")
+  subject   String
+  body      String // HTML with {{variables}}
+  variables Json? // documented placeholders
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([code, locale])
+}
+
+/// SMS and WhatsApp message templates.
+model SmsTemplate {
+  id        String              @id @default(cuid())
+  code      String
+  locale    String              @default("fr")
+  channel   NotificationChannel @default(SMS)
+  body      String
+  variables Json?
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  deletedAt DateTime?
+
+  @@unique([code, locale, channel])
+}
+
+/// Invoice / receipt / quote layouts editable from the dashboard.
+model DocumentTemplate {
+  id        String       @id @default(cuid())
+  storeId   String?
+  type      DocumentType
+  name      String
+  locale    String?
+  html      String
+  css       String?
+  paperSize String       @default("A4") // A4 | A5 | THERMAL_80 | THERMAL_58
+  settings  Json? // show logo, footer text, legal notes...
+  isDefault Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+
+  invoices Invoice[]
+
+  @@index([type, isDefault])
+}

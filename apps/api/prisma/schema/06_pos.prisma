@@ -1,0 +1,97 @@
+// ============================================================================
+// 6. POINT OF SALE
+// ============================================================================
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum CashMovementType {
+  SALE
+  DEPOSIT
+  REFUND
+  CASH_IN
+  CASH_OUT
+}
+
+model CashRegister {
+  id        String    @id @default(cuid())
+  storeId   String
+  code      String
+  name      String
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  sessions  CashSession[]
+  heldSales PosHeldSale[]
+
+  @@unique([storeId, code])
+}
+
+/// One shift on a register: open with a float, close with a counted amount and a daily report.
+model CashSession {
+  id            String            @id @default(cuid())
+  registerId    String
+  storeId       String
+  status        CashSessionStatus @default(OPEN)
+  openedById    String
+  closedById    String?
+  openedAt      DateTime          @default(now())
+  closedAt      DateTime?
+  openingFloat  Decimal           @default(0) @db.Decimal(12, 2)
+  expectedCash  Decimal?          @db.Decimal(12, 2)
+  countedCash   Decimal?          @db.Decimal(12, 2)
+  variance      Decimal?          @db.Decimal(12, 2)
+  closingReport Json? // totals per payment method, sales count, refunds, ...
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  deletedAt     DateTime?
+
+  register  CashRegister   @relation(fields: [registerId], references: [id])
+  movements CashMovement[]
+  orders    Order[]
+  payments  Payment[]
+
+  @@index([registerId, status])
+  @@index([storeId, openedAt])
+}
+
+model CashMovement {
+  id        String           @id @default(cuid())
+  sessionId String
+  type      CashMovementType
+  amount    Decimal          @db.Decimal(12, 2) // signed from the drawer's point of view
+  methodId  String?
+  paymentId String?
+  reason    String?
+  actorId   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+
+  session CashSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([paymentId])
+}
+
+/// Parked POS cart so the cashier can serve another customer and resume later.
+model PosHeldSale {
+  id         String    @id @default(cuid())
+  storeId    String
+  registerId String?
+  cashierId  String
+  label      String?
+  cart       Json
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  register CashRegister? @relation(fields: [registerId], references: [id])
+
+  @@index([storeId, cashierId])
+}

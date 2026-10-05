@@ -1,0 +1,234 @@
+// ============================================================================
+// 7. PURCHASING (ACHAT)
+// ============================================================================
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum ReceiptStatus {
+  DRAFT
+  POSTED // stock updated
+  VOID
+}
+
+enum SupplierInvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
+model Supplier {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  name             String
+  contactName      String?
+  email            String?
+  phone            String?
+  address          String?
+  city             String?
+  country          String    @default("MA")
+  taxId            String? // ICE / IF / VAT number
+  paymentTermsDays Int       @default(30)
+  currency         String    @default("MAD")
+  isLensLab        Boolean   @default(false) // supplies prescription lenses
+  notes            String?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
+  invoices       SupplierInvoice[]
+  payments       SupplierPayment[]
+  labLensOrders  LabLensOrder[]
+  lensEntries    LensCatalogEntry[]
+  expenses       Expense[]
+
+  @@index([name])
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  storeId     String
+  warehouseId String
+  supplierId  String
+  number      String
+  status      PurchaseOrderStatus @default(DRAFT)
+  currency    String              @default("MAD")
+  orderedAt   DateTime?
+  expectedAt  DateTime?           @db.Date
+  subtotal    Decimal             @default(0) @db.Decimal(12, 2)
+  taxTotal    Decimal             @default(0) @db.Decimal(12, 2)
+  total       Decimal             @default(0) @db.Decimal(12, 2)
+  notes       String?
+  createdById String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+
+  warehouse     Warehouse           @relation(fields: [warehouseId], references: [id])
+  supplier      Supplier            @relation(fields: [supplierId], references: [id])
+  lines         PurchaseOrderLine[]
+  receipts      GoodsReceipt[]
+  invoices      SupplierInvoice[]
+  labLensOrders LabLensOrder[]
+
+  @@unique([storeId, number])
+  @@index([supplierId])
+  @@index([storeId, status])
+}
+
+model PurchaseOrderLine {
+  id              String    @id @default(cuid())
+  purchaseOrderId String
+  variantId       String?
+  lensEntryId     String?
+  description     String
+  qtyOrdered      Int
+  qtyReceived     Int       @default(0)
+  unitCost        Decimal   @db.Decimal(12, 2)
+  taxRatePct      Decimal?  @db.Decimal(5, 2)
+  lineTotal       Decimal   @db.Decimal(12, 2)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  purchaseOrder PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  variant       ProductVariant?    @relation(fields: [variantId], references: [id])
+  receiptLines  GoodsReceiptLine[]
+
+  @@index([purchaseOrderId])
+  @@index([variantId])
+}
+
+model GoodsReceipt {
+  id              String        @id @default(cuid())
+  storeId         String
+  warehouseId     String
+  purchaseOrderId String?
+  supplierId      String
+  number          String
+  status          ReceiptStatus @default(DRAFT)
+  deliveryNoteRef String?
+  receivedAt      DateTime      @default(now())
+  receivedById    String?
+  note            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  warehouse     Warehouse             @relation(fields: [warehouseId], references: [id])
+  purchaseOrder PurchaseOrder?        @relation(fields: [purchaseOrderId], references: [id])
+  supplier      Supplier              @relation(fields: [supplierId], references: [id])
+  lines         GoodsReceiptLine[]
+  invoiceLines  SupplierInvoiceLine[]
+
+  @@unique([storeId, number])
+  @@index([purchaseOrderId])
+  @@index([supplierId])
+}
+
+model GoodsReceiptLine {
+  id                  String    @id @default(cuid())
+  receiptId           String
+  purchaseOrderLineId String?
+  variantId           String
+  quantity            Int
+  unitCost            Decimal   @db.Decimal(12, 2)
+  lotNumber           String?
+  expiryDate          DateTime? @db.Date // contact lenses
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  receipt           GoodsReceipt          @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  purchaseOrderLine PurchaseOrderLine?    @relation(fields: [purchaseOrderLineId], references: [id])
+  variant           ProductVariant        @relation(fields: [variantId], references: [id])
+  invoiceLines      SupplierInvoiceLine[]
+
+  @@index([receiptId])
+  @@index([variantId])
+}
+
+model SupplierInvoice {
+  id              String                @id @default(cuid())
+  storeId         String
+  supplierId      String
+  purchaseOrderId String?
+  number          String // internal reference
+  supplierRef     String // supplier's own invoice number
+  status          SupplierInvoiceStatus @default(UNPAID)
+  issuedAt        DateTime              @db.Date
+  dueAt           DateTime?             @db.Date
+  subtotal        Decimal               @default(0) @db.Decimal(12, 2)
+  taxTotal        Decimal               @default(0) @db.Decimal(12, 2)
+  total           Decimal               @default(0) @db.Decimal(12, 2)
+  paidTotal       Decimal               @default(0) @db.Decimal(12, 2)
+  attachmentUrl   String?
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  deletedAt       DateTime?
+
+  supplier      Supplier              @relation(fields: [supplierId], references: [id])
+  purchaseOrder PurchaseOrder?        @relation(fields: [purchaseOrderId], references: [id])
+  lines         SupplierInvoiceLine[]
+  payments      SupplierPayment[]
+
+  @@unique([storeId, number])
+  @@unique([supplierId, supplierRef])
+  @@index([status, dueAt])
+}
+
+model SupplierInvoiceLine {
+  id                 String    @id @default(cuid())
+  invoiceId          String
+  goodsReceiptId     String?
+  goodsReceiptLineId String?
+  description        String
+  quantity           Int
+  unitCost           Decimal   @db.Decimal(12, 2)
+  taxRatePct         Decimal?  @db.Decimal(5, 2)
+  lineTotal          Decimal   @db.Decimal(12, 2)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  invoice          SupplierInvoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  goodsReceipt     GoodsReceipt?     @relation(fields: [goodsReceiptId], references: [id])
+  goodsReceiptLine GoodsReceiptLine? @relation(fields: [goodsReceiptLineId], references: [id])
+
+  @@index([invoiceId])
+}
+
+model SupplierPayment {
+  id            String          @id @default(cuid())
+  storeId       String
+  supplierId    String
+  invoiceId     String?
+  methodId      String
+  bankAccountId String?
+  amount        Decimal         @db.Decimal(12, 2)
+  status        PaymentTxStatus @default(CAPTURED)
+  reference     String?
+  paidAt        DateTime        @default(now())
+  note          String?
+  createdById   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+
+  supplier    Supplier         @relation(fields: [supplierId], references: [id])
+  invoice     SupplierInvoice? @relation(fields: [invoiceId], references: [id])
+  bankAccount BankAccount?     @relation(fields: [bankAccountId], references: [id])
+
+  @@index([supplierId, paidAt])
+  @@index([invoiceId])
+}

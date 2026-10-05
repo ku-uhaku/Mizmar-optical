@@ -1,0 +1,214 @@
+// ============================================================================
+// 4. CUSTOMERS (CRM) & PRESCRIPTIONS
+// ============================================================================
+
+enum CustomerSource {
+  POS
+  ONLINE
+  IMPORT
+  APPOINTMENT
+}
+
+enum PrescriptionSource {
+  STORE // measured in-store by an optometrist
+  UPLOAD // customer uploaded a scan/photo
+  SELF // typed in by the customer
+  EXTERNAL // from an outside ophthalmologist
+}
+
+model Customer {
+  id               String         @id @default(cuid())
+  /// Optional link to a storefront login (User.type = CUSTOMER).
+  userId           String?        @unique
+  code             String?        @unique
+  firstName        String
+  lastName         String
+  email            String?
+  phone            String?
+  whatsapp         String?
+  gender           Gender?
+  dateOfBirth      DateTime?      @db.Date
+  nationalId       String?
+  preferredStoreId String?
+  source           CustomerSource @default(POS)
+  marketingOptIn   Boolean        @default(false)
+  loyaltyPoints    Int            @default(0)
+  notes            String?
+  createdById      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  user          User?               @relation(fields: [userId], references: [id])
+  addresses     CustomerAddress[]
+  prescriptions Prescription[]
+  insurances    CustomerInsurance[]
+  customerNotes CustomerNote[]
+  wishlist      WishlistItem[]
+  loyalty       LoyaltyLedger[]
+  orders        Order[]
+  quotes        Quote[]
+  invoices      Invoice[]
+  creditNotes   CreditNote[]
+  payments      Payment[]
+  returns       Return[]
+  jobOrders     JobOrder[]
+  appointments  Appointment[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([lastName, firstName])
+  @@index([preferredStoreId])
+}
+
+model CustomerAddress {
+  id                String    @id @default(cuid())
+  customerId        String
+  label             String?
+  recipient         String?
+  phone             String?
+  line1             String
+  line2             String?
+  city              String
+  region            String?
+  postalCode        String?
+  country           String    @default("MA")
+  isDefaultShipping Boolean   @default(false)
+  isDefaultBilling  Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+/// One row = one full prescription. OD = right eye, OS = left eye.
+/// Powers are in diopters, AXIS in degrees (0-180), PD in millimetres.
+model Prescription {
+  id             String             @id @default(cuid())
+  customerId     String
+  storeId        String?
+  source         PrescriptionSource @default(STORE)
+  prescriberName String?
+  issuedAt       DateTime           @db.Date
+  expiresAt      DateTime?          @db.Date
+
+  odSph   Decimal? @db.Decimal(5, 2)
+  odCyl   Decimal? @db.Decimal(5, 2)
+  odAxis  Int?
+  odAdd   Decimal? @db.Decimal(5, 2)
+  odPd    Decimal? @db.Decimal(4, 1) // monocular PD
+  odPrism Decimal? @db.Decimal(5, 2)
+  odBase  String?
+
+  osSph   Decimal? @db.Decimal(5, 2)
+  osCyl   Decimal? @db.Decimal(5, 2)
+  osAxis  Int?
+  osAdd   Decimal? @db.Decimal(5, 2)
+  osPd    Decimal? @db.Decimal(4, 1)
+  osPrism Decimal? @db.Decimal(5, 2)
+  osBase  String?
+
+  pdTotal       Decimal?  @db.Decimal(4, 1) // binocular PD
+  attachmentUrl String? // uploaded scan / photo
+  notes         String?
+  isActive      Boolean   @default(true)
+  verifiedById  String?
+  verifiedAt    DateTime?
+  createdById   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  customer             Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderLineLensConfigs OrderLineLensConfig[]
+  jobOrders            JobOrder[]
+
+  @@index([customerId, issuedAt])
+  @@index([storeId])
+}
+
+model InsuranceProvider {
+  id                 String    @id @default(cuid())
+  name               String
+  code               String?   @unique
+  phone              String?
+  email              String?
+  defaultCoveragePct Decimal?  @db.Decimal(5, 2)
+  notes              String?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  customers CustomerInsurance[]
+}
+
+model CustomerInsurance {
+  id           String    @id @default(cuid())
+  customerId   String
+  providerId   String
+  policyNumber String?
+  memberId     String?
+  coveragePct  Decimal?  @db.Decimal(5, 2)
+  validFrom    DateTime? @db.Date
+  validTo      DateTime? @db.Date
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  customer Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  provider InsuranceProvider @relation(fields: [providerId], references: [id])
+
+  @@index([customerId])
+  @@index([providerId])
+}
+
+model CustomerNote {
+  id         String    @id @default(cuid())
+  customerId String
+  authorId   String?
+  body       String
+  isPinned   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+}
+
+model WishlistItem {
+  id         String    @id @default(cuid())
+  customerId String
+  productId  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([productId])
+}
+
+model LoyaltyLedger {
+  id           String    @id @default(cuid())
+  customerId   String
+  points       Int // signed
+  balanceAfter Int
+  reason       String
+  orderId      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+}

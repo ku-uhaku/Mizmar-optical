@@ -1,0 +1,22 @@
+// Mizmar Optical — database schema (PostgreSQL).
+//
+// Conventions applied to EVERY model:
+//   id        String   cuid
+//   createdAt / updatedAt
+//   deletedAt DateTime?  -> soft delete (filtered by the Prisma client extension)
+// Money:        Decimal(12,2)   Optical measures: Decimal(5,2)
+// Store scoping: transactional models carry `storeId` (indexed).
+// Translatable content: `translations Json?` shaped { ar: {...}, en: {...} }
+//   (the base columns hold the default-locale value, French).
+// createdById / updatedById style columns are plain scalars (no FK) on purpose:
+//   they avoid dozens of back-relations on User and survive user soft-deletes.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}

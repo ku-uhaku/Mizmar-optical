@@ -1,0 +1,151 @@
+// ============================================================================
+// 8. WORKSHOP / LAB (FABRICATION)
+// ============================================================================
+
+/// pending → lenses ordered → received → cutting/mounting → quality check → ready → delivered
+enum JobOrderStatus {
+  PENDING
+  LENSES_ORDERED
+  LENSES_RECEIVED
+  CUTTING_MOUNTING
+  QUALITY_CHECK
+  READY
+  DELIVERED
+  ON_HOLD
+  CANCELLED
+}
+
+enum JobPriority {
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum FrameSource {
+  STORE_STOCK
+  CUSTOMER_OWN
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum LabLensOrderStatus {
+  TO_ORDER
+  ORDERED
+  RECEIVED
+  DEFECTIVE
+  CANCELLED
+}
+
+model JobOrder {
+  id                 String         @id @default(cuid())
+  storeId            String
+  number             String
+  orderId            String?
+  orderLineId        String?
+  customerId         String
+  prescriptionId     String?
+  frameSource        FrameSource    @default(STORE_STOCK)
+  frameVariantId     String?
+  frameDescription   String? // for customer-supplied frames
+  lensTypeId         String?
+  lensEntryId        String?
+  treatments         Json? // snapshot [{ id, name }]
+  fitting            Json? // PD, seg height, pantoscopic tilt, ... measured at fitting
+  status             JobOrderStatus @default(PENDING)
+  priority           JobPriority    @default(NORMAL)
+  technicianId       String? // staff user
+  promisedAt         DateTime?
+  readyAt            DateTime?
+  deliveredAt        DateTime?
+  qcPassed           Boolean?
+  qcNotes            String?
+  notes              String?
+  customerNotifiedAt DateTime?
+  createdById        String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
+
+  order         Order?                  @relation(fields: [orderId], references: [id])
+  orderLine     OrderLine?              @relation(fields: [orderLineId], references: [id])
+  customer      Customer                @relation(fields: [customerId], references: [id])
+  prescription  Prescription?           @relation(fields: [prescriptionId], references: [id])
+  frameVariant  ProductVariant?         @relation(fields: [frameVariantId], references: [id])
+  technician    User?                   @relation("JobTechnician", fields: [technicianId], references: [id])
+  history       JobOrderStatusHistory[]
+  tasks         JobOrderTask[]
+  labLensOrders LabLensOrder[]
+
+  @@unique([storeId, number])
+  @@index([storeId, status])
+  @@index([technicianId, status])
+  @@index([customerId])
+  @@index([orderId])
+  @@index([promisedAt])
+}
+
+model JobOrderStatusHistory {
+  id          String          @id @default(cuid())
+  jobOrderId  String
+  fromStatus  JobOrderStatus?
+  toStatus    JobOrderStatus
+  changedById String?
+  note        String?
+  notified    Boolean         @default(false) // customer notified on this transition
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@index([jobOrderId, createdAt])
+}
+
+model JobOrderTask {
+  id           String     @id @default(cuid())
+  jobOrderId   String
+  name         String
+  assignedToId String?
+  status       TaskStatus @default(TODO)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@index([jobOrderId])
+  @@index([assignedToId])
+}
+
+/// A lens blank ordered from an outside lab for a job order.
+model LabLensOrder {
+  id              String             @id @default(cuid())
+  jobOrderId      String
+  supplierId      String
+  purchaseOrderId String?
+  lensEntryId     String?
+  status          LabLensOrderStatus @default(TO_ORDER)
+  reference       String?
+  cost            Decimal?           @db.Decimal(12, 2)
+  orderedAt       DateTime?
+  expectedAt      DateTime?
+  receivedAt      DateTime?
+  notes           String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  deletedAt       DateTime?
+
+  jobOrder      JobOrder       @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  supplier      Supplier       @relation(fields: [supplierId], references: [id])
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+
+  @@index([jobOrderId])
+  @@index([supplierId, status])
+}

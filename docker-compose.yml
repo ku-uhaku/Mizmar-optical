@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_USER: mizmar
+      POSTGRES_PASSWORD: mizmar
+      POSTGRES_DB: mizmar
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mizmar"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - redisdata:/data
+
+  # S3-compatible object storage. MinIO's public images were withdrawn from
+  # Docker Hub/Quay, so RustFS is used locally; any S3 endpoint works via S3_* env.
+  s3:
+    image: docker.io/rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: mizmar
+      RUSTFS_SECRET_KEY: mizmar-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - s3data:/data
+
+volumes:
+  pgdata:
+  redisdata:
+  s3data:

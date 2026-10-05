@@ -1,0 +1,109 @@
+// ============================================================================
+// 9. APPOINTMENTS (EYE EXAMS)
+// ============================================================================
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  ONLINE
+  STAFF
+  PHONE
+}
+
+model AppointmentType {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  name           String
+  description    String?
+  durationMin    Int       @default(30)
+  bufferMin      Int       @default(0)
+  price          Decimal   @default(0) @db.Decimal(12, 2)
+  color          String?
+  bookableOnline Boolean   @default(true)
+  isActive       Boolean   @default(true)
+  translations   Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  appointments Appointment[]
+}
+
+/// Weekly recurring availability of an optometrist in a store. weekday: 0 = Sunday … 6 = Saturday.
+model PractitionerAvailability {
+  id             String    @id @default(cuid())
+  practitionerId String
+  storeId        String
+  weekday        Int
+  startTime      String // "09:00"
+  endTime        String // "17:30"
+  validFrom      DateTime? @db.Date
+  validTo        DateTime? @db.Date
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  practitioner User @relation("PractitionerSchedule", fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId, weekday])
+  @@index([storeId])
+}
+
+model PractitionerTimeOff {
+  id             String    @id @default(cuid())
+  practitionerId String
+  startsAt       DateTime
+  endsAt         DateTime
+  reason         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  practitioner User @relation("PractitionerTimeOff", fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId, startsAt])
+}
+
+model Appointment {
+  id                   String            @id @default(cuid())
+  storeId              String
+  number               String
+  typeId               String
+  practitionerId       String?
+  customerId           String?
+  status               AppointmentStatus @default(PENDING)
+  source               AppointmentSource @default(ONLINE)
+  startsAt             DateTime
+  endsAt               DateTime
+  guestName            String? // booking without an account
+  guestEmail           String?
+  guestPhone           String?
+  reason               String?
+  notes                String?
+  confirmedAt          DateTime?
+  cancelledAt          DateTime?
+  cancelReason         String?
+  reminderSentAt       DateTime?
+  resultPrescriptionId String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+
+  type         AppointmentType @relation(fields: [typeId], references: [id])
+  practitioner User?           @relation("PractitionerAppointments", fields: [practitionerId], references: [id])
+  customer     Customer?       @relation(fields: [customerId], references: [id])
+
+  @@unique([storeId, number])
+  @@index([storeId, startsAt])
+  @@index([practitionerId, startsAt])
+  @@index([customerId])
+  @@index([status])
+}

@@ -1,0 +1,410 @@
+// ============================================================================
+// 1. PLATFORM & ACCESS
+// ============================================================================
+
+enum UserType {
+  STAFF
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum SettingScope {
+  GLOBAL
+  STORE
+}
+
+enum DocumentType {
+  ORDER
+  QUOTE
+  INVOICE
+  CREDIT_NOTE
+  RECEIPT
+  RETURN
+  PURCHASE_ORDER
+  GOODS_RECEIPT
+  STOCK_TRANSFER
+  STOCK_ADJUSTMENT
+  INVENTORY_COUNT
+  JOB_ORDER
+  APPOINTMENT
+  EXPENSE
+  PAYSLIP
+  CUSTOMER
+}
+
+enum SequenceReset {
+  NEVER
+  YEARLY
+  MONTHLY
+}
+
+enum CustomFieldEntity {
+  CUSTOMER
+  PRODUCT
+  PRODUCT_VARIANT
+  ORDER
+  PRESCRIPTION
+  JOB_ORDER
+  SUPPLIER
+  EMPLOYEE
+  APPOINTMENT
+}
+
+enum CustomFieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DECIMAL
+  BOOLEAN
+  DATE
+  SELECT
+  MULTI_SELECT
+}
+
+/// A branch / shop. Also powers the public store locator.
+model Store {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  name          String
+  slug          String    @unique
+  phone         String?
+  email         String?
+  address       String?
+  city          String?
+  region        String?
+  postalCode    String?
+  country       String    @default("MA")
+  latitude      Decimal?  @db.Decimal(9, 6)
+  longitude     Decimal?  @db.Decimal(9, 6)
+  openingHours  Json? // { mon: [{open:"09:00",close:"19:00"}], ... }
+  timezone      String    @default("Africa/Casablanca")
+  currency      String    @default("MAD")
+  isDefault     Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  showOnLocator Boolean   @default(true)
+  translations  Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  users      UserStore[]
+  warehouses Warehouse[]
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model User {
+  id              String     @id @default(cuid())
+  /// Globally unique. On soft delete the service suffixes the value (e.g. "x@y.com#del-<id>") to release it.
+  email           String     @unique
+  phone           String?
+  passwordHash    String
+  firstName       String
+  lastName        String
+  avatarUrl       String?
+  type            UserType   @default(STAFF)
+  status          UserStatus @default(ACTIVE)
+  locale          String     @default("fr")
+  isSuperAdmin    Boolean    @default(false)
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  failedLogins    Int        @default(0)
+  lockedUntil     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  roles          UserRole[]
+  stores         UserStore[]
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordReset[]
+
+  technicianJobs           JobOrder[]                 @relation("JobTechnician")
+  availabilitySlots        PractitionerAvailability[] @relation("PractitionerSchedule")
+  timeOffPeriods           PractitionerTimeOff[]      @relation("PractitionerTimeOff")
+  practitionerAppointments Appointment[]              @relation("PractitionerAppointments")
+  customer                 Customer?
+  employee                 Employee?
+
+  @@index([type, status])
+  @@index([deletedAt])
+}
+
+model Role {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String?
+  isSystem    Boolean   @default(false) // system roles cannot be deleted
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+/// Catalog row per `module:action` key; seeded from packages/shared so code and DB cannot drift.
+model Permission {
+  id          String    @id @default(cuid())
+  key         String    @unique // e.g. "products:create"
+  module      String
+  action      String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  roles RolePermission[]
+
+  @@index([module])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserRole {
+  id        String    @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+}
+
+/// Which stores a staff user may work in (multi-branch scoping).
+model UserStore {
+  id        String    @id @default(cuid())
+  userId    String
+  storeId   String
+  isDefault Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store     Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId])
+  @@index([storeId])
+}
+
+/// Hashed refresh tokens with rotation; `familyId` lets us revoke the whole chain on reuse.
+model RefreshToken {
+  id           String    @id @default(cuid())
+  userId       String
+  tokenHash    String    @unique
+  familyId     String
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  userAgent    String?
+  ip           String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Append-only. Application code never soft-deletes rows (deletedAt kept only for uniformity).
+model AuditLog {
+  id        String    @id @default(cuid())
+  actorId   String?
+  storeId   String?
+  entity    String
+  entityId  String?
+  action    String // CREATE | UPDATE | DELETE | LOGIN | ...
+  before    Json?
+  after     Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+  @@index([storeId, createdAt])
+  @@index([createdAt])
+}
+
+/// Dashboard-editable configuration. `scopeId` = "global" or a storeId, so the unique key
+/// works for both scopes (a nullable storeId would not be unique in Postgres).
+model Setting {
+  id        String       @id @default(cuid())
+  scope     SettingScope @default(GLOBAL)
+  scopeId   String       @default("global")
+  group     String // general | tax | invoice | seo | checkout | ...
+  key       String
+  value     Json
+  isPublic  Boolean      @default(false) // exposed to the storefront
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+
+  @@unique([scope, scopeId, key])
+  @@index([group])
+}
+
+/// UI string overrides editable from the dashboard (on top of the static next-intl files).
+model Translation {
+  id        String    @id @default(cuid())
+  locale    String
+  namespace String
+  key       String
+  value     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([locale, namespace, key])
+}
+
+model Language {
+  id         String    @id @default(cuid())
+  code       String    @unique // fr | ar | en
+  name       String
+  nativeName String
+  isRtl      Boolean   @default(false)
+  isDefault  Boolean   @default(false)
+  isActive   Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+}
+
+model Currency {
+  id           String    @id @default(cuid())
+  code         String    @unique // MAD | EUR | USD
+  name         String
+  symbol       String
+  decimals     Int       @default(2)
+  exchangeRate Decimal   @default(1) @db.Decimal(14, 6) // relative to the base currency
+  isDefault    Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+model CustomFieldDefinition {
+  id           String            @id @default(cuid())
+  entity       CustomFieldEntity
+  key          String
+  label        String
+  type         CustomFieldType
+  options      Json? // for SELECT / MULTI_SELECT
+  isRequired   Boolean           @default(false)
+  isActive     Boolean           @default(true)
+  sortOrder    Int               @default(0)
+  translations Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  deletedAt    DateTime?
+
+  values CustomFieldValue[]
+
+  @@unique([entity, key])
+}
+
+model CustomFieldValue {
+  id           String                @id @default(cuid())
+  definitionId String
+  entity       CustomFieldEntity
+  entityId     String
+  value        Json
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  deletedAt    DateTime?
+  definition   CustomFieldDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+
+  @@unique([definitionId, entityId])
+  @@index([entity, entityId])
+}
+
+/// Per-store, per-document-type numbering (e.g. INV-2026-000123).
+model DocumentSequence {
+  id         String        @id @default(cuid())
+  storeId    String
+  docType    DocumentType
+  prefix     String
+  padding    Int           @default(6)
+  nextNumber Int           @default(1)
+  reset      SequenceReset @default(YEARLY)
+  periodKey  String        @default("all") // "2026", "2026-10" or "all"
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+
+  @@unique([storeId, docType, periodKey])
+}
+
+model MediaAsset {
+  id           String    @id @default(cuid())
+  key          String    @unique // object-storage key
+  url          String
+  fileName     String?
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  alt          String?
+  folder       String?
+  uploadedById String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([folder])
+}
+
+/// Enable/disable ERP / storefront modules from the dashboard.
+model ModuleToggle {
+  id        String    @id @default(cuid())
+  moduleKey String    @unique // pos | workshop | hr | blog | appointments | ...
+  isEnabled Boolean   @default(true)
+  config    Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
