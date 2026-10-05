@@ -118,6 +118,12 @@ async function seedUsers(stores: { id: string; code: string }[]) {
     ['technician@mizmar.local', 'Youssef', 'Alaoui', 'technician'], ['cashier@mizmar.local', 'Nadia', 'Tazi', 'cashier'],
   ];
   for (const [email, f, l, role] of demo) await make(email, demoPass, f, l, role, [casa]);
+  // the demo optician takes eye exams at the Casablanca store: Mon-Fri 09:00-12:30 and 14:30-18:30, Saturday morning
+  const optician = await prisma.user.findUnique({ where: { email: 'optician@mizmar.local' } });
+  if (optician && !(await prisma.practitionerAvailability.count({ where: { practitionerId: optician.id, storeId: casa } }))) {
+    const week = [1, 2, 3, 4, 5].flatMap((weekday) => [{ weekday, startTime: '09:00', endTime: '12:30' }, { weekday, startTime: '14:30', endTime: '18:30' }]);
+    await prisma.practitionerAvailability.createMany({ data: [...week, { weekday: 6, startTime: '09:00', endTime: '13:00' }].map((r) => ({ ...r, practitionerId: optician.id, storeId: casa })) });
+  }
   log(`users (demo staff password: ${demoPass})`);
 }
 
@@ -281,6 +287,7 @@ async function seedContent() {
     ['job_ready', 'fr', 'Vos lunettes sont prêtes', '<p>Bonjour {{firstName}}, vos lunettes sont prêtes à être retirées chez {{storeName}}.</p>'],
     ['order_ready', 'fr', 'Votre commande {{orderNumber}} est prête', '<p>Bonjour {{firstName}}, votre commande {{orderNumber}} vous attend chez {{storeName}}.</p>'],
     ['order_ready', 'en', 'Your order {{orderNumber}} is ready', '<p>Hello {{firstName}}, your order {{orderNumber}} is waiting for you at {{storeName}}.</p>'],
+    ['appointment_reminder', 'fr', 'Rappel : rendez-vous demain', '<p>Bonjour {{firstName}}, nous vous rappelons votre rendez-vous du {{date}} à {{time}} chez {{storeName}}.</p>'],
     ['appointment_confirmation', 'fr', 'Rendez-vous confirmé', '<p>Votre rendez-vous du {{date}} à {{time}} chez {{storeName}} est confirmé.</p>'],
   ];
   for (const [code, locale, subject, body] of tpls) await prisma.emailTemplate.upsert({ where: { code_locale: { code, locale } }, update: {}, create: { code, locale, subject, body } });
