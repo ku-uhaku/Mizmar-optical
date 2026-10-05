@@ -92,8 +92,11 @@ The demo accounts exist to try role-based access (e.g. log in as the cashier and
 
 ## Troubleshooting
 
-- **`pnpm approve-builds` / `ERR_PNPM_IGNORED_BUILDS`** — pnpm 12 blocks dependency install scripts by default. The
-  message is informational here; nothing in this repo needs them (Prisma 7 uses a query compiler, no engine download).
+- **`ERR_PNPM_IGNORED_BUILDS` (install exits 1)** — pnpm 12 refuses to finish installing when a dependency has an
+  install script nobody has approved or denied. This repo records an explicit decision in `pnpm-workspace.yaml`
+  (`allowBuilds`: all `false` — none of them needs a script here; Prisma 7 uses a query compiler, no engine download).
+  If you add a dependency that triggers the error, review it and run `pnpm approve-builds` (or `pnpm approve-builds '!pkg'`
+  to deny).
 - **Podman instead of Docker** — works as-is (`docker compose` → `podman-compose`). Compose uses fully-qualified image
   names for this reason. If a published port is taken, change it in `docker-compose.yml` and `.env`.
 - **Object storage image** — MinIO withdrew its public container images, so local dev uses **RustFS**
