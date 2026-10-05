@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "declaration": false,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "incremental": false,
+    "rewriteRelativeImportExtensions": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src", "prisma/seed.ts", "test"]
+}
