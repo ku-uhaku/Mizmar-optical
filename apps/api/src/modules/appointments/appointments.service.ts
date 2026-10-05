@@ -166,10 +166,10 @@ export class AppointmentsService {
     if (mine >= MAX_UPCOMING_PER_CONTACT) throw new ConflictException({ code: 'TOO_MANY_APPOINTMENTS', message: `You already have ${MAX_UPCOMING_PER_CONTACT} upcoming appointments: cancel one or call the store` });
   }
 
-  private publicView(a: any, store?: { name: string; address?: string | null; city?: string | null; phone?: string | null }) {
+  private publicView(a: any, store?: { name: string; address?: string | null; city?: string | null; phone?: string | null; timezone?: string }) {
     return {
       id: a.id, number: a.number, status: a.status, startsAt: a.startsAt, endsAt: a.endsAt, reason: a.reason, type: { name: a.type.name, durationMin: a.type.durationMin },
-      practitioner: a.practitioner ? `${a.practitioner.firstName} ${a.practitioner.lastName}` : null, store: store ? { name: store.name, address: store.address, city: store.city, phone: store.phone } : undefined,
+      practitioner: a.practitioner ? `${a.practitioner.firstName} ${a.practitioner.lastName}` : null, store: store ? { name: store.name, address: store.address, city: store.city, phone: store.phone, timezone: store.timezone } : undefined,
     };
   }
 

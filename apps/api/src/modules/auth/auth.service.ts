@@ -102,7 +102,8 @@ export class AuthService {
     await this.prisma.raw.passwordReset.create({
       data: { userId: user.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + RESET_TTL_MINUTES * 60_000) },
     });
-    const resetUrl = `${this.config.get('ADMIN_URL', { infer: true })}/reset-password?token=${token}`;
+    // staff reset in the dashboard, storefront customers on the website (in their own language)
+    const resetUrl = user.type === 'CUSTOMER' ? `${this.config.get('WEB_URL', { infer: true })}/${user.locale}/compte/reinitialiser?token=${token}` : `${this.config.get('ADMIN_URL', { infer: true })}/reset-password?token=${token}`;
     await this.mailQueue.add('password_reset', { to: user.email, template: 'password_reset', locale: user.locale, data: { firstName: user.firstName, resetUrl } });
   }
 

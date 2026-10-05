@@ -9,6 +9,7 @@ import { FALLBACK_BRANDING, publicApi, type Branding, type MenuItem, type Store 
 import { brandingCss, fontsHref, safeFont } from '@/lib/theme';
 import { Footer } from '@/components/layout/footer';
 import { Header } from '@/components/layout/header';
+import { Providers } from '@/components/providers';
 import '../globals.css';
 
 // Rendered per request; data freshness comes from the fetch cache (30 s, stale-while-revalidate), and nothing is
@@ -51,9 +52,11 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <body className="min-h-screen antialiased">
         <NextIntlClientProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Header name={b.storeName} logoUrl={b.logoUrl} items={header?.items ?? []} />
-            <main>{children}</main>
-            <Footer branding={b} pages={pages ?? []} stores={stores ?? []} />
+            <Providers>
+              <Header name={b.storeName} logoUrl={b.logoUrl} items={header?.items ?? []} />
+              <main>{children}</main>
+              <Footer branding={b} pages={pages ?? []} stores={stores ?? []} />
+            </Providers>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

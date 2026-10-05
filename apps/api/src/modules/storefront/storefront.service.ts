@@ -101,11 +101,12 @@ export class StorefrontService {
 
   /** Slugs for sitemap.xml. */
   async sitemap() {
-    const [products, pages, categories] = await Promise.all([
+    const [products, pages, categories, posts] = await Promise.all([
       this.prisma.db.product.findMany({ where: { isPublished: true, status: 'ACTIVE' }, select: { slug: true, updatedAt: true } }),
       this.prisma.db.cmsPage.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, updatedAt: true } }),
       this.prisma.db.category.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+      this.prisma.db.blogPost.findMany({ where: { status: 'PUBLISHED', publishedAt: { lte: new Date() } }, select: { slug: true, updatedAt: true } }),
     ]);
-    return { products, pages, categories };
+    return { products, pages, categories, posts };
   }
 }

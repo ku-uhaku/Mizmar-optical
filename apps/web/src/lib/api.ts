@@ -38,3 +38,34 @@ export const FALLBACK_BRANDING: Branding = {
 /** Dashboard-editable translations: `translations[locale][field]` wins over the base (French) column. */
 export const tr = <T extends { translations?: Tr | null }>(o: T, field: keyof T & string, locale: string): string =>
   (o.translations?.[locale]?.[field] as string | undefined) ?? (o[field] as unknown as string);
+
+// ---------------------------------------------------------------- shop (server-side reads)
+export interface ShopCard {
+  id: string; slug: string; name: string; type: string; translations: Tr | null; brand: string | null; gender: string | null; isLensConfigurable: boolean;
+  image: { url: string; alt: string | null } | null; priceFrom: number | null; onSale: boolean; stockStatus: 'IN_STOCK' | 'LOW' | 'OUT'; colors: { name: string; hex: string | null }[];
+}
+export interface Paged<T> { data: T[]; meta: { page: number; limit: number; total: number; totalPages: number } }
+export interface Facets {
+  brands: { name: string; slug: string }[]; categories: { name: string; slug: string; parentId: string | null; translations: Tr | null }[]; shapes: { name: string; slug: string }[]; materials: { name: string; slug: string }[];
+  genders: string[]; colors: { name: string; hex: string | null }[]; sizes: string[]; price: { min: number; max: number };
+}
+export interface ShopVariant { id: string; sku: string; name: string | null; color: string | null; colorHex: string | null; size: string | null; price: number; compareAtPrice: number | null; stockStatus: 'IN_STOCK' | 'LOW' | 'OUT'; pickupStoreIds: string[] }
+export interface ShopProduct {
+  id: string; slug: string; name: string; type: string; translations: Tr | null; shortDescription: string | null; description: string | null; gender: string | null; isLensConfigurable: boolean; requiresPrescription: boolean;
+  seoTitle: string | null; seoDescription: string | null; brand: { name: string; slug: string } | null; category: { name: string; slug: string } | null;
+  images: { id: string; url: string; alt: string | null; variantId: string | null; isPrimary: boolean }[]; variants: ShopVariant[];
+  spec: { shape: { name: string } | null; material: { name: string } | null; rimType: string | null; lensWidthMm: number | null; lensHeightMm: number | null; bridgeMm: number | null; templeMm: number | null; frameWidthMm: number | null; isPolarized: boolean; uvProtection: string | null } | null;
+  pickupStores: { id: string; name: string }[]; rating: { average: number | null; count: number }; reviews: { id: string; authorName: string | null; rating: number; title: string | null; body: string | null; createdAt: string }[]; related: ShopCard[];
+}
+export interface LensOption {
+  id: string; code: string; kind: string; name: string; description: string | null; translations: Tr | null; requiresAdd: boolean; basePrice: number;
+  treatments: { id: string; name: string; category: string; description: string | null; translations: Tr | null; price: number }[];
+  entries: { id: string; name: string; refractiveIndex: number; material: string | null; price: number; leadTimeDays: number | null }[];
+}
+export interface BlogPostCard { slug: string; title: string; excerpt: string | null; coverUrl: string | null; publishedAt: string; tags: string[]; translations: Tr | null; category: { name: string; slug: string } | null }
+
+/** Server-side fetch with arbitrary query (catalog filters). Same rules as publicApi: 404 -> null, 5xx -> throw. */
+export async function publicQuery<T>(path: string, query: Record<string, string | undefined> = {}, revalidate = 30): Promise<T | null> {
+  const qs = new URLSearchParams(Object.entries(query).filter((e): e is [string, string] => !!e[1])).toString();
+  return publicApi<T>(`${path}${qs ? `?${qs}` : ''}`, revalidate);
+}
