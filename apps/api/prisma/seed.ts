@@ -242,9 +242,9 @@ function hash(s: string) { let h = 7; for (const c of s) h = (h * 31 + c.charCod
 async function seedPeopleAndOps(stores: { id: string; code: string }[]) {
   const casa = stores.find((s) => s.code === 'CASA')!.id;
   const customers = [
-    { code: 'CLI-0001', firstName: 'Fatima', lastName: 'Zahraoui', phone: '+212600111222', email: 'fatima.z@example.com', gender: 'WOMEN' as const },
-    { code: 'CLI-0002', firstName: 'Omar', lastName: 'El Fassi', phone: '+212600333444', email: 'omar.f@example.com', gender: 'MEN' as const },
-    { code: 'CLI-0003', firstName: 'Lina', lastName: 'Chraibi', phone: '+212600555666', email: 'lina.c@example.com', gender: 'WOMEN' as const },
+    { code: 'CLI-0001', firstName: 'Fatima', lastName: 'Zahraoui', phone: '+212600111222', email: 'fatima.z@example.com', gender: 'FEMALE' as const },
+    { code: 'CLI-0002', firstName: 'Omar', lastName: 'El Fassi', phone: '+212600333444', email: 'omar.f@example.com', gender: 'MALE' as const },
+    { code: 'CLI-0003', firstName: 'Lina', lastName: 'Chraibi', phone: '+212600555666', email: 'lina.c@example.com', gender: 'FEMALE' as const },
   ];
   for (const [i, c] of customers.entries()) {
     const cust = await prisma.customer.upsert({ where: { code: c.code }, update: {}, create: { ...c, preferredStoreId: casa, marketingOptIn: true } });

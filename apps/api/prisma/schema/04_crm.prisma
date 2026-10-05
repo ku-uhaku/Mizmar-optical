@@ -9,6 +9,18 @@ enum CustomerSource {
   APPOINTMENT
 }
 
+/// Self-identified, optional. Deliberately separate from `Gender` (the product audience: men/women/unisex/kids).
+enum CustomerGender {
+  MALE
+  FEMALE
+  NON_BINARY
+  TRANS_MAN
+  TRANS_WOMAN
+  GENDERQUEER
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
 enum PrescriptionSource {
   STORE // measured in-store by an optometrist
   UPLOAD // customer uploaded a scan/photo
@@ -17,26 +29,26 @@ enum PrescriptionSource {
 }
 
 model Customer {
-  id               String         @id @default(cuid())
+  id               String          @id @default(cuid())
   /// Optional link to a storefront login (User.type = CUSTOMER).
-  userId           String?        @unique
-  code             String?        @unique
+  userId           String?         @unique
+  code             String?         @unique
   firstName        String
   lastName         String
   email            String?
   phone            String?
   whatsapp         String?
-  gender           Gender?
-  dateOfBirth      DateTime?      @db.Date
+  gender           CustomerGender?
+  dateOfBirth      DateTime?       @db.Date
   nationalId       String?
   preferredStoreId String?
-  source           CustomerSource @default(POS)
-  marketingOptIn   Boolean        @default(false)
-  loyaltyPoints    Int            @default(0)
+  source           CustomerSource  @default(POS)
+  marketingOptIn   Boolean         @default(false)
+  loyaltyPoints    Int             @default(0)
   notes            String?
   createdById      String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
   deletedAt        DateTime?
 
   user          User?               @relation(fields: [userId], references: [id])

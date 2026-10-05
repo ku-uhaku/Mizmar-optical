@@ -331,10 +331,14 @@
     "details": "Coordonnées",
     "confirmDelete": "Supprimer {name} ?",
     "genders": {
-      "MEN": "Homme",
-      "WOMEN": "Femme",
-      "UNISEX": "Mixte",
-      "KIDS": "Enfant"
+      "MALE": "Homme",
+      "FEMALE": "Femme",
+      "NON_BINARY": "Non-binaire",
+      "TRANS_MAN": "Homme trans",
+      "TRANS_WOMAN": "Femme trans",
+      "GENDERQUEER": "Genderqueer",
+      "OTHER": "Autre",
+      "PREFER_NOT_TO_SAY": "Préfère ne pas préciser"
     },
     "tabs": {
       "overview": "Aperçu",

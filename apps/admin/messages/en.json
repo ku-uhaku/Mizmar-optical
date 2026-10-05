@@ -331,10 +331,14 @@
     "details": "Details",
     "confirmDelete": "Delete {name}?",
     "genders": {
-      "MEN": "Men",
-      "WOMEN": "Women",
-      "UNISEX": "Unisex",
-      "KIDS": "Child"
+      "MALE": "Male",
+      "FEMALE": "Female",
+      "NON_BINARY": "Non-binary",
+      "TRANS_MAN": "Trans man",
+      "TRANS_WOMAN": "Trans woman",
+      "GENDERQUEER": "Genderqueer",
+      "OTHER": "Other",
+      "PREFER_NOT_TO_SAY": "Prefer not to say"
     },
     "tabs": {
       "overview": "Overview",

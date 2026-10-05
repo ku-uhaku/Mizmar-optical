@@ -48,7 +48,8 @@ export class CustomersService {
     const { prescriptions, customerNotes, _count, ...rest } = c;
     return {
       ...rest, prescriptionCount: _count.prescriptions, currentPrescription: prescriptions[0] ? presentRx(prescriptions[0]) : null,
-      notes: customerNotes.map((n) => ({ ...n, author: authors.find((a) => a.id === n.authorId) ?? null })),
+      // NOT `notes`: that is already the customer's own free-text column (a name clash silently replaced it with this list)
+      noteItems: customerNotes.map((n) => ({ ...n, author: authors.find((a) => a.id === n.authorId) ?? null })),
     };
   }
 

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsDate, IsEmail, IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
-import { CustomerSource, Gender, PrescriptionSource } from '../../generated/prisma/client';
+import { CustomerGender, CustomerSource, PrescriptionSource } from '../../generated/prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 const o = () => IsOptional();
@@ -17,7 +17,7 @@ export class CreateCustomerDto {
   @ApiPropertyOptional() @o() @trim() @IsEmail() email?: string;
   @ApiPropertyOptional() @o() @trim() @Matches(PHONE, { message: 'phone is not a valid number' }) phone?: string;
   @ApiPropertyOptional() @o() @trim() @Matches(PHONE, { message: 'whatsapp is not a valid number' }) whatsapp?: string;
-  @ApiPropertyOptional({ enum: vals(Gender) }) @o() @IsIn(vals(Gender)) gender?: string;
+  @ApiPropertyOptional({ enum: vals(CustomerGender) }) @o() @IsIn(vals(CustomerGender)) gender?: string;
   @ApiPropertyOptional({ example: '1985-03-21' }) @o() @Type(() => Date) @IsDate() dateOfBirth?: Date;
   @ApiPropertyOptional() @o() @trim() @IsString() @MaxLength(30) nationalId?: string;
   @ApiPropertyOptional() @o() @IsString() preferredStoreId?: string;
@@ -29,7 +29,7 @@ export class CreateCustomerDto {
 export class UpdateCustomerDto extends PartialType(CreateCustomerDto) {}
 
 export class ListCustomersDto extends PaginationDto {
-  @ApiPropertyOptional({ enum: vals(Gender) }) @o() @IsIn(vals(Gender)) gender?: string;
+  @ApiPropertyOptional({ enum: vals(CustomerGender) }) @o() @IsIn(vals(CustomerGender)) gender?: string;
   @ApiPropertyOptional() @o() @IsString() storeId?: string;
   @ApiPropertyOptional() @o() @bool() @IsBoolean() marketingOptIn?: boolean;
 }

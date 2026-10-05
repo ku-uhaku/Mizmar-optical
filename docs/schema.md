@@ -2,7 +2,7 @@
 
 _Generated from `apps/api/prisma/schema/*.prisma` by `scripts/gen-schema-doc.py`. Do not edit by hand._
 
-**123 models · 66 enums · PostgreSQL 17 · Prisma 7**
+**123 models · 67 enums · PostgreSQL 17 · Prisma 7**
 
 ## Conventions (every model)
 
@@ -82,7 +82,7 @@ _Generated from `apps/api/prisma/schema/*.prisma` by `scripts/gen-schema-doc.py`
 
 ## CUSTOMERS (CRM) & PRESCRIPTIONS
 
-**Enums:** `CustomerSource` (POS, ONLINE, IMPORT, APPOINTMENT), `PrescriptionSource` (STORE, UPLOAD, SELF, EXTERNAL)
+**Enums:** `CustomerSource` (POS, ONLINE, IMPORT, APPOINTMENT), `CustomerGender` (MALE, FEMALE, NON_BINARY, TRANS_MAN, TRANS_WOMAN, GENDERQUEER, OTHER, PREFER_NOT_TO_SAY), `PrescriptionSource` (STORE, UPLOAD, SELF, EXTERNAL)
 
 | Model | Purpose | Key fields | References (FK) |
 |---|---|---|---|

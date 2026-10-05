@@ -331,10 +331,14 @@
     "details": "البيانات",
     "confirmDelete": "حذف {name}؟",
     "genders": {
-      "MEN": "رجل",
-      "WOMEN": "امرأة",
-      "UNISEX": "غير محدد",
-      "KIDS": "طفل"
+      "MALE": "ذكر",
+      "FEMALE": "أنثى",
+      "NON_BINARY": "غير ثنائي الجنس",
+      "TRANS_MAN": "رجل متحول",
+      "TRANS_WOMAN": "امرأة متحولة",
+      "GENDERQUEER": "جندركوير",
+      "OTHER": "آخر",
+      "PREFER_NOT_TO_SAY": "أفضّل عدم التحديد"
     },
     "tabs": {
       "overview": "نظرة عامة",

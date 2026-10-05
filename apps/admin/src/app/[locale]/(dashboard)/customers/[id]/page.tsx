@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CUSTOMER_GENDERS } from '@mizmar/shared';
 import { Link, useRouter } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -48,7 +49,7 @@ function Overview({ c: cust }: { c: any }) {
             <Field id="o-ph" label={t('phone')}><Input id="o-ph" type="tel" disabled={w} {...register('phone')} /></Field>
             <Field id="o-wa" label="WhatsApp"><Input id="o-wa" type="tel" disabled={w} {...register('whatsapp')} /></Field>
             <Field id="o-em" label={t('email')}><Input id="o-em" type="email" disabled={w} {...register('email')} /></Field>
-            <Field id="o-g" label={t('gender')}><NativeSelect id="o-g" disabled={w} {...register('gender')}><option value="">—</option>{['MEN', 'WOMEN', 'UNISEX', 'KIDS'].map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect></Field>
+            <Field id="o-g" label={t('gender')}><NativeSelect id="o-g" disabled={w} {...register('gender')}><option value="">—</option>{CUSTOMER_GENDERS.map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect></Field>
             <Field id="o-dob" label={t('dateOfBirth')}><Input id="o-dob" type="date" disabled={w} {...register('dateOfBirth')} /></Field>
             <Field id="o-nid" label={t('nationalId')}><Input id="o-nid" disabled={w} {...register('nationalId')} /></Field>
             <Field id="o-notes" label={co('notes')} className="sm:col-span-2"><Textarea id="o-notes" disabled={w} {...register('notes')} /></Field>
@@ -97,11 +98,11 @@ export default function CustomerPage({ params }: { params: Promise<{ id: string 
         {cust && (<>
           <PageHeader title={`${cust.firstName} ${cust.lastName}`} subtitle={[cust.code, cust.phone, cust.email].filter(Boolean).join(' · ')}
             actions={can('customers:delete') && <Button variant="outline" onClick={() => confirm(t('confirmDelete', { name: cust.firstName })) && del.mutate()}><Trash2 className="text-destructive" /> {c('delete')}</Button>} />
-          <Tabs value={tab} onChange={setTab} items={[{ value: 'overview', label: t('tabs.overview') }, { value: 'rx', label: r('title') }, { value: 'addresses', label: `${t('tabs.addresses')} (${cust.addresses.length})` }, { value: 'notes', label: `${t('tabs.notes')} (${cust.notes.length})` }, { value: 'insurance', label: `${t('tabs.insurance')} (${cust.insurances.length})` }]} />
+          <Tabs value={tab} onChange={setTab} items={[{ value: 'overview', label: t('tabs.overview') }, { value: 'rx', label: r('title') }, { value: 'addresses', label: `${t('tabs.addresses')} (${cust.addresses.length})` }, { value: 'notes', label: `${t('tabs.notes')} (${cust.noteItems.length})` }, { value: 'insurance', label: `${t('tabs.insurance')} (${cust.insurances.length})` }]} />
           {tab === 'overview' && <Overview c={cust} />}
           {tab === 'rx' && <PrescriptionsTab customerId={id} />}
           {tab === 'addresses' && <AddressesTab customerId={id} addresses={cust.addresses} />}
-          {tab === 'notes' && <NotesTab customerId={id} notes={cust.notes} />}
+          {tab === 'notes' && <NotesTab customerId={id} notes={cust.noteItems} />}
           {tab === 'insurance' && <InsuranceTab customerId={id} insurances={cust.insurances} />}
         </>)}
       </div>

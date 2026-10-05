@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { CUSTOMER_GENDERS } from '@mizmar/shared';
 import { createTestApp } from './app';
 import { CREDS, loginAs, uid } from './helpers';
 
@@ -28,6 +29,20 @@ describe('Customers & prescriptions (e2e)', () => {
       await admin.post('/customers', { firstName: 'X', lastName: 'Y', code: 'HACK-1' }).expect(400);
     });
 
+    it('gender is an inclusive, optional, self-identified list; product-audience values are not accepted', async () => {
+      for (const g of CUSTOMER_GENDERS) expect((await newCustomer({ gender: g })).gender).toBe(g);
+      expect(CUSTOMER_GENDERS).toHaveLength(8);
+      for (const bad of ['UNISEX', 'KIDS', 'MEN', 'WOMEN', 'robot']) await admin.post('/customers', { firstName: 'a', lastName: 'b', gender: bad }).expect(400);
+      const none = await newCustomer();
+      expect(none.gender).toBeNull(); // never required
+      const nb = await newCustomer({ gender: 'NON_BINARY' });
+      expect((await admin.get(`/customers?search=${nb.lastName}&gender=NON_BINARY`)).body.data.map((c: any) => c.id)).toEqual([nb.id]);
+      expect((await admin.get(`/customers?search=${nb.lastName}&gender=FEMALE`)).body.data).toHaveLength(0);
+      await admin.get('/customers?gender=UNISEX').expect(400);
+      expect((await admin.patch(`/customers/${nb.id}`, { gender: null }).expect(200)).body.gender).toBeNull(); // can be cleared
+      expect((await admin.patch(`/customers/${nb.id}`, { gender: 'PREFER_NOT_TO_SAY' }).expect(200)).body.gender).toBe('PREFER_NOT_TO_SAY');
+    });
+
     it('customer codes are unique under concurrency', async () => {
       const rs = await Promise.all(Array.from({ length: 8 }, () => admin.post('/customers', { firstName: 'Par', lastName: uid(), phone: phone() }).expect(201)));
       expect(new Set(rs.map((r) => r.body.code)).size).toBe(8);
@@ -50,12 +65,12 @@ describe('Customers & prescriptions (e2e)', () => {
     });
 
     it('searches (name / phone / code), filters, paginates, updates and soft-deletes', async () => {
-      const c = await newCustomer({ firstName: 'Zéphyrine', gender: 'WOMEN' });
+      const c = await newCustomer({ firstName: 'Zéphyrine', gender: 'FEMALE' });
       for (const q of [c.lastName, c.phone, c.code, 'zéphy']) {
         const r = (await admin.get(`/customers?search=${encodeURIComponent(q)}`).expect(200)).body;
         expect(r.data.map((x: any) => x.id)).toContain(c.id);
       }
-      expect((await admin.get(`/customers?search=${c.lastName}&gender=MEN`)).body.data).toHaveLength(0);
+      expect((await admin.get(`/customers?search=${c.lastName}&gender=MALE`)).body.data).toHaveLength(0);
       expect((await admin.get('/customers?limit=2&page=2')).body.meta).toMatchObject({ page: 2, limit: 2 });
       await admin.get('/customers?limit=1000').expect(400);
       const upd = (await admin.patch(`/customers/${c.id}`, { marketingOptIn: true, dateOfBirth: '1985-03-21' }).expect(200)).body;
@@ -85,7 +100,7 @@ describe('Customers & prescriptions (e2e)', () => {
       const c = await newCustomer();
       await admin.post(`/customers/${c.id}/notes`, { body: 'Prefers thin frames' }).expect(201);
       await admin.post(`/customers/${c.id}/notes`, { body: 'Allergic to nickel', isPinned: true }).expect(201);
-      const notes = (await admin.get(`/customers/${c.id}`)).body.notes;
+      const notes = (await admin.get(`/customers/${c.id}`)).body.noteItems;
       expect(notes.map((n: any) => n.body)).toEqual(['Allergic to nickel', 'Prefers thin frames']);
       expect(notes[0].author).toMatchObject({ firstName: 'Super' });
       const prov = (await admin.post('/insurance-providers', { name: `Mutuelle ${uid()}`, defaultCoveragePct: 80 }).expect(201)).body;
@@ -97,6 +112,19 @@ describe('Customers & prescriptions (e2e)', () => {
       expect((await admin.del(`/insurance-providers/${prov.id}`).expect(409)).body.code).toBe('IN_USE');
       await admin.del(`/customers/insurances/${ins.id}`).expect(204);
       await admin.del(`/insurance-providers/${prov.id}`).expect(204);
+    });
+
+    it('the customer\'s free-text notes and its note entries are separate fields, and a GET result can be sent back as an edit', async () => {
+      const c = await newCustomer({ notes: 'Prefers morning appointments' });
+      await admin.post(`/customers/${c.id}/notes`, { body: 'Called back on Monday' }).expect(201);
+      const got = (await admin.get(`/customers/${c.id}`)).body;
+      expect(got.notes).toBe('Prefers morning appointments'); // the text column survives
+      expect(got.noteItems.map((n: any) => n.body)).toEqual(['Called back on Monday']);
+      // what the edit form does: send back the editable fields it received
+      const edit = { firstName: got.firstName, lastName: got.lastName, phone: got.phone, email: got.email, gender: 'GENDERQUEER', notes: got.notes, marketingOptIn: got.marketingOptIn };
+      const saved = (await admin.patch(`/customers/${c.id}`, edit).expect(200)).body;
+      expect(saved).toMatchObject({ gender: 'GENDERQUEER', notes: 'Prefers morning appointments' });
+      await admin.patch(`/customers/${c.id}`, { notes: ['not', 'text'] }).expect(400);
     });
 
     it('CSV export neutralises spreadsheet formulas and quotes properly', async () => {

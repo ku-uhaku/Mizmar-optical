@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { Download, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { CUSTOMER_GENDERS } from '@mizmar/shared';
 import { Link, useRouter } from '@/i18n/navigation';
 import { api, apiDownload, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -52,7 +53,7 @@ function CreateCustomer() {
           <Field id="c-ln" label={t('lastName')} required error={errors.lastName?.message}><Input id="c-ln" {...register('lastName', { required: c('required') })} /></Field>
           <Field id="c-ph" label={t('phone')}><Input id="c-ph" type="tel" inputMode="tel" {...register('phone')} /></Field>
           <Field id="c-em" label={t('email')}><Input id="c-em" type="email" {...register('email')} /></Field>
-          <Field id="c-g" label={t('gender')}><NativeSelect id="c-g" {...register('gender')}><option value="">—</option>{['MEN', 'WOMEN', 'UNISEX', 'KIDS'].map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect></Field>
+          <Field id="c-g" label={t('gender')}><NativeSelect id="c-g" {...register('gender')}><option value="">—</option>{CUSTOMER_GENDERS.map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect></Field>
           <Field id="c-dob" label={t('dateOfBirth')}><Input id="c-dob" type="date" {...register('dateOfBirth')} /></Field>
           <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-[var(--primary)]" {...register('marketingOptIn')} /> {t('marketingOptIn')}</label>
           {dupes.length > 0 && (
@@ -89,7 +90,7 @@ export default function CustomersPage() {
           {can('customers:export') && <Button variant="outline" onClick={() => apiDownload('/customers/export.csv', 'customers.csv').catch((e) => toast.error(e.message))}><Download /> {t('export')}</Button>}
           {can('customers:create') && <CreateCustomer />}
         </>} />
-        <NativeSelect className="w-44" aria-label={t('gender')} value={gender} onChange={(e) => setGender(e.target.value)}><option value="">{t('gender')}: {c('all')}</option>{['MEN', 'WOMEN', 'UNISEX', 'KIDS'].map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect>
+        <NativeSelect className="w-60" aria-label={t('gender')} value={gender} onChange={(e) => setGender(e.target.value)}><option value="">{t('gender')}: {c('all')}</option>{CUSTOMER_GENDERS.map((g) => <option key={g} value={g}>{t(`genders.${g}`)}</option>)}</NativeSelect>
         <DataTable<Row> queryKey="customers" endpoint="/customers" columns={columns} extraQuery={{ gender: gender || undefined }} />
       </div>
     </RequirePermission>
