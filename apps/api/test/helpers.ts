@@ -2,7 +2,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 export const CREDS = {
-  admin: { email: 'admin@mizmar.local', password: 'ChangeMe!2026' },
+  // the SAME values the seed used (global-setup seeds with this environment), so tests pass whatever .env says
+  admin: { email: process.env.SEED_ADMIN_EMAIL ?? 'admin@mizmar.local', password: process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe!2026' },
   cashier: { email: 'cashier@mizmar.local', password: 'Demo!2026pass' },
   optician: { email: 'optician@mizmar.local', password: 'Demo!2026pass' },
   technician: { email: 'technician@mizmar.local', password: 'Demo!2026pass' },

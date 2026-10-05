@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp } from './app';
+import { CREDS } from './helpers';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('Users CRUD, soft delete & audit (e2e)', () => {
@@ -13,7 +14,7 @@ describe('Users CRUD, soft delete & audit (e2e)', () => {
   beforeAll(async () => {
     app = await createTestApp();
     prisma = app.get(PrismaService);
-    const { body } = await http().post('/api/v1/auth/login').send({ email: 'admin@mizmar.local', password: 'ChangeMe!2026' }).expect(200);
+    const { body } = await http().post('/api/v1/auth/login').send(CREDS.admin).expect(200);
     auth = { Authorization: `Bearer ${body.accessToken}` };
   });
   afterAll(async () => { await app.close(); });

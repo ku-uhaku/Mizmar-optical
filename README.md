@@ -48,14 +48,15 @@ Open:
 
 | Account | Email | Password | Access |
 |---|---|---|---|
-| Super admin | `admin@mizmar.local` | `ChangeMe!2026` (from `SEED_ADMIN_*` in `.env`) | everything, all stores |
+| Super admin | `SEED_ADMIN_EMAIL` (default `admin@mizmar.local`) | `SEED_ADMIN_PASSWORD` from your `.env` (`.env.example` ships `Password!`) | everything, all stores |
 | Store manager | `manager@mizmar.local` | `Demo!2026pass` | Casablanca store |
 | Optician | `optician@mizmar.local` | `Demo!2026pass` | Casablanca store |
 | Technician | `technician@mizmar.local` | `Demo!2026pass` | Casablanca store |
 | Cashier | `cashier@mizmar.local` | `Demo!2026pass` | Casablanca store |
 
 The demo accounts exist to try role-based access (e.g. log in as the cashier and see the sidebar shrink).
-**Delete or re-password them before any real deployment.**
+**Delete or re-password them — and change the super-admin password — before any real deployment.** The seed only creates
+the super admin if it doesn't exist yet, so editing `SEED_ADMIN_PASSWORD` later does not change an existing account.
 
 ## Commands
 

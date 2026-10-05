@@ -2,8 +2,10 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp } from './app';
 
-const ADMIN = { email: 'admin@mizmar.local', password: 'ChangeMe!2026' };
-const CASHIER = { email: 'cashier@mizmar.local', password: 'Demo!2026pass' };
+import { CREDS } from './helpers';
+
+const ADMIN = CREDS.admin;
+const CASHIER = CREDS.cashier;
 
 describe('Auth flow (e2e)', () => {
   let app: INestApplication;

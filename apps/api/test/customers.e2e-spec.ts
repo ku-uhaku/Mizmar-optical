@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp } from './app';
-import { loginAs, uid } from './helpers';
+import { CREDS, loginAs, uid } from './helpers';
 
 type Client = Awaited<ReturnType<typeof loginAs>>;
 const phone = () => `+2126${Math.floor(10_000_000 + Math.random() * 89_999_999)}`;
@@ -195,7 +195,7 @@ describe('Customers & prescriptions (e2e)', () => {
       request(app.getHttpServer()).post(`/api/v1/media?folder=${folder}`).set('Authorization', `Bearer ${(client as any)._token ?? ''}`);
 
     it('stores a real image, ignoring the client file name and claimed type; rejects spoofed, oversized and misplaced files', async () => {
-      const { body } = await request(app.getHttpServer()).post('/api/v1/auth/login').send({ email: 'admin@mizmar.local', password: 'ChangeMe!2026' });
+      const { body } = await request(app.getHttpServer()).post('/api/v1/auth/login').send(CREDS.admin);
       const auth = { Authorization: `Bearer ${body.accessToken}` };
       const post = (buf: Buffer, name: string, mime: string, folder = 'products') => request(app.getHttpServer()).post(`/api/v1/media?folder=${folder}`).set(auth).attach('file', buf, { filename: name, contentType: mime });
 
