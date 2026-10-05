@@ -79,7 +79,7 @@ export const SYSTEM_ROLES: Record<string, { name: string; description: string; p
     description: 'POS sales and register',
     permissions: [
       'pos:access', 'pos:manage_register', 'products:read', 'customers:read', 'customers:create',
-      'orders:read', 'orders:create', 'invoices:read', 'payments:read', 'payments:create', 'prescriptions:read', 'workshop:create',
+      'orders:read', 'orders:create', 'orders:update', 'quotes:read', 'quotes:create', 'quotes:update', 'invoices:read', 'payments:read', 'payments:create', 'returns:read', 'prescriptions:read', 'workshop:create',
     ],
   },
   hr: {

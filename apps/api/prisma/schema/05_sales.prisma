@@ -220,6 +220,8 @@ model Order {
   cancelledAt      DateTime?
   cancelReason     String?
   createdById      String?
+  /// Client-generated id of a checkout attempt: retrying the SAME attempt returns the original order instead of selling twice.
+  clientRef        String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   deletedAt        DateTime?
@@ -238,6 +240,7 @@ model Order {
   jobOrders      JobOrder[]
 
   @@unique([storeId, number])
+  @@unique([storeId, clientRef])
   @@index([storeId, status])
   @@index([storeId, channel, createdAt])
   @@index([customerId])

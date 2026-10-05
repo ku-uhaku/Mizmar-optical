@@ -16,6 +16,16 @@ export class SettingsService {
     });
   }
 
+  /**
+   * One typed setting. A store-specific value (scope STORE) wins over the global one; `fallback` is used when neither exists,
+   * so code never breaks on a fresh database.
+   */
+  async value<T>(key: string, fallback: T, storeId?: string | null): Promise<T> {
+    const rows = await this.prisma.db.setting.findMany({ where: { key, OR: [{ scope: 'GLOBAL' }, ...(storeId ? [{ scope: 'STORE' as const, scopeId: storeId }] : [])] } });
+    const row = rows.find((r) => r.scope === 'STORE') ?? rows[0];
+    return row ? (row.value as T) : fallback;
+  }
+
   /** Settings flagged `isPublic` that the storefront may read without auth. */
   async publicSettings() {
     const rows = await this.prisma.db.setting.findMany({ where: { isPublic: true, scope: 'GLOBAL' } });

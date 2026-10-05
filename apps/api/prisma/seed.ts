@@ -8,6 +8,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, DocumentType } from '../src/generated/prisma/client';
 import { ALL_PERMISSIONS, SYSTEM_ROLES, parsePermission } from '@mizmar/shared';
+import { DEFAULT_TEMPLATES } from '../src/modules/documents/default-templates';
 
 config({ path: path.resolve(__dirname, '../../../.env') });
 
@@ -144,7 +145,7 @@ async function seedCommerceConfig() {
   const settings: [string, string, unknown, boolean][] = [
     ['general', 'default_locale', 'fr', true], ['general', 'default_currency', 'MAD', true], ['general', 'timezone', 'Africa/Casablanca', true],
     ['general', 'units', 'metric', true], ['checkout', 'guest_checkout', true, true], ['checkout', 'prescription_required_for_lenses', true, true],
-    ['inventory', 'low_stock_alerts', true, false], ['pos', 'require_open_session', true, false], ['invoice', 'footer', 'Merci de votre confiance — Mizmar Optique', false],
+    ['inventory', 'low_stock_alerts', true, false], ['pos', 'require_open_session', true, false], ['pos', 'min_deposit_pct', 30, false], ['pos', 'allow_negative_stock', false, false], ['invoice', 'footer', 'Merci de votre confiance — Mizmar Optique', false],
   ];
   for (const [group, key, value, isPublic] of settings)
     await prisma.setting.upsert({ where: { scope_scopeId_key: { scope: 'GLOBAL', scopeId: 'global', key } }, update: {}, create: { group, key, value: value as any, isPublic } });
@@ -280,8 +281,13 @@ async function seedContent() {
   for (const [code, locale, subject, body] of tpls) await prisma.emailTemplate.upsert({ where: { code_locale: { code, locale } }, update: {}, create: { code, locale, subject, body } });
   for (const channel of ['SMS', 'WHATSAPP'] as const)
     await prisma.smsTemplate.upsert({ where: { code_locale_channel: { code: 'job_ready', locale: 'fr', channel } }, update: {}, create: { code: 'job_ready', locale: 'fr', channel, body: 'Mizmar Optique : vos lunettes sont prêtes ! Retrait chez {{storeName}}.' } });
-  for (const type of ['INVOICE', 'RECEIPT'] as const)
-    await ensure(prisma.documentTemplate, { type, isDefault: true }, { name: type === 'INVOICE' ? 'Facture A4' : 'Ticket 80mm', paperSize: type === 'INVOICE' ? 'A4' : 'THERMAL_80', html: '<h1>{{documentNumber}}</h1>{{lines}}<p>Total : {{total}}</p>' });
+  // real, printable templates (receipt 80mm, invoice A4, quote A4). Old placeholder rows from the first seed are upgraded in place.
+  for (const type of ['INVOICE', 'RECEIPT', 'QUOTE'] as const) {
+    const t = DEFAULT_TEMPLATES[type];
+    const existing = await prisma.documentTemplate.findFirst({ where: { type, isDefault: true, storeId: null } });
+    if (!existing) await prisma.documentTemplate.create({ data: { type, isDefault: true, name: t.name, paperSize: t.paperSize, html: t.html } });
+    else if (!/\{\{\s*doc\./.test(existing.html)) await prisma.documentTemplate.update({ where: { id: existing.id }, data: { name: t.name, paperSize: t.paperSize, html: t.html } });
+  }
 
   const header = await prisma.menu.upsert({ where: { code: 'header' }, update: {}, create: { code: 'header', name: 'Menu principal' } });
   const footer = await prisma.menu.upsert({ where: { code: 'footer' }, update: {}, create: { code: 'footer', name: 'Pied de page' } });
