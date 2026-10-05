@@ -124,6 +124,11 @@ export class PayablesService {
     return this.get(id, user);
   }
 
+  /** Methods an accountant can pay a supplier with (the till list is behind pos:access, which accountants do not have). */
+  paymentMethods() {
+    return this.prisma.db.paymentMethodConfig.findMany({ where: { isActive: true }, orderBy: { sortOrder: 'asc' }, select: { id: true, code: true, name: true } });
+  }
+
   // ------------------------------------------------------------------ views
   async statement(supplierId: string, user: AuthUser) {
     const supplier = await this.prisma.db.supplier.findFirst({ where: { id: supplierId } });

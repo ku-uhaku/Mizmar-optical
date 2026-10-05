@@ -3,9 +3,10 @@
 Optical-store platform: a public **storefront** and an **admin ERP** (POS, inventory, purchasing, lens workshop,
 appointments, HR, finance, reports), fully configurable from the dashboard.
 
-> **Status: Phases 1–3 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; and the
-> **point of sale** (register sessions, checkout, prescription orders with deposits, returns, quotes, invoices).
-> Purchasing, workshop, storefront commerce, HR, finance and reports arrive in phases 4–7 (see [Roadmap](#roadmap)).
+> **Status: Phases 1–4 of 7 complete** — foundations; catalog, products, inventory, customers, prescriptions; the
+> **point of sale** (register sessions, checkout, prescription orders with deposits, returns, quotes, invoices); and
+> **purchasing + workshop** (suppliers, purchase orders, goods receipts, supplier invoices/payments, lens-lab job orders).
+> Storefront commerce, HR, finance and reports arrive in phases 5–7 (see [Roadmap](#roadmap)).
 
 | Part | Stack | Port |
 |---|---|---|
@@ -145,6 +146,32 @@ How the money side works — worth knowing before touching it:
   editable per store (`DocumentTemplate`); built-ins are the fallback.
 - Settings you can change (group `pos`): `require_open_session`, `min_deposit_pct`, `allow_negative_stock`; `checkout.prescription_required_for_lenses`.
 
+## What phase 4 added (purchasing, workshop)
+
+| Area | API | Admin screen |
+|---|---|---|
+| Suppliers | `suppliers` CRUD (unique code, payment terms, `isLensLab`), `GET suppliers/:id/statement` | **Fournisseurs** |
+| Purchase orders | `purchase-orders` — draft → send → receive; costs entered **excl. tax**; `GET :id/document` prints the PO | **Achats** (orders, detail, receive dialog) |
+| Goods receipts | `purchase-orders/:id/receipts` (partial deliveries), `goods-receipts` (direct, no PO), `…/void` | **Achats → Bons de réception** |
+| Supplier invoices | `supplier-invoices` — unique per (supplier, supplier ref); lines matched to received goods | **Factures fournisseurs** |
+| Supplier payments | `supplier-invoices/:id/payments` — partial/full, never above the balance; `purchasing/summary` | same screen |
+| Workshop | `jobs` — a job per prescription line is created **inside the checkout transaction**; manual jobs for the customer's own frame | **Atelier** (kanban board + job page) |
+
+- **Receiving** locks the order row, refuses more than is outstanding, adds stock through `StockService.move()`
+  (`PURCHASE_RECEIPT`, with the unit cost) and keeps a weighted-average cost. Voiding a receipt reverses the stock
+  (`SUPPLIER_RETURN`) unless it is already invoiced.
+- **3-way match:** an invoice line linked to a receipt line cannot exceed what was received and not yet invoiced.
+- **Workshop flow:** pending → lenses ordered → lenses received → cutting/mounting → quality check → ready → delivered
+  (plus on hold / cancelled). Rules enforced by the API: a technician is assigned before cutting, every task is done before the
+  quality check, a failed check returns the job to the bench with notes, and READY is reachable only through a passed check.
+  Lab lens orders drive the job (ordered/received/defective). When a job becomes ready the customer is notified by the
+  channels in `workshop.notify_channels` (default email + SMS; delivery is logged until providers are configured).
+- **Hand-over:** `POST orders/:id/deliver` is refused (`JOBS_NOT_READY`) until every prescription pair is ready, then delivers
+  the jobs with the order; cancelling an order cancels its jobs. Default lead time: lens `leadTimeDays`, else setting
+  `workshop.default_days` (5).
+- Roles: technicians can self-assign and run the bench; assigning others needs `workshop:assign`; supplier-invoice payment
+  needs `finance:approve` (accountants). New screens/permissions follow the existing module catalog.
+
 ## Troubleshooting
 
 - **`ERR_PNPM_IGNORED_BUILDS` (install exits 1)** — pnpm 12 refuses to finish installing when a dependency has an
@@ -182,7 +209,7 @@ How the money side works — worth knowing before touching it:
 1. ✅ **Foundations** — monorepo, infra, schema, auth + RBAC, seed, admin + storefront shells
 2. ✅ **Products, inventory, customers, prescriptions**
 3. ✅ **POS, sales, invoices**
-4. Purchasing, workshop / fabrication
+4. ✅ **Purchasing, workshop / fabrication**
 5. Storefront commerce (catalog, lens configurator, checkout), appointments
 6. HR, finance, reports
 7. Full settings UI, i18n polish, tests, hardening

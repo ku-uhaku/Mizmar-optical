@@ -148,7 +148,7 @@ export class OrdersService {
           await this.stock.move(tx, { storeId, variantId: l.variantId, warehouseId: wh.id, type: 'SALE', quantity: -l.quantity, unitCost: l.unitCost ?? undefined, refType: 'Order', refId: order.id, note: number, actorId: user.id, allowNegative });
           if (l.lens) lensLines.push({ lineId: line.id, variantId: l.variantId, description: l.description, lens: l.lens });
         }
-        if (lensLines.length) await createJobsForOrder(tx, this.numbering, { orderId: order.id, storeId, customerId: customerId!, userId: user.id, defaultDays: await this.settings.value<number>('workshop_default_days', 5, storeId), lines: lensLines });
+        if (lensLines.length) await createJobsForOrder(tx, this.numbering, { orderId: order.id, storeId, customerId: customerId!, userId: user.id, defaultDays: await this.settings.value<number>('default_days', 5, storeId), lines: lensLines });
         const invoice = await this.createInvoice(tx, { orderId: order.id, storeId, customerId: customerId ?? null, cart, number: await this.numbering.next(tx, storeId, 'INVOICE') });
         await this.applyPayments(tx, { id: order.id, storeId, customerId: customerId ?? null, invoiceId: invoice.id, totalCents, alreadyPaidCents: 0 }, dto.payments, methods, session, user);
         const { balance } = await this.recalc(tx, order.id);

@@ -72,6 +72,7 @@ export class WorkshopService {
     const where: Record<string, any> = {
       ...(stores && { storeId: { in: stores } }), ...(dto.status && { status: dto.status }), ...(dto.customerId && { customerId: dto.customerId }),
       ...(dto.technicianId && { technicianId: dto.technicianId }), ...(dto.mine && { technicianId: user.id }),
+      ...(dto.open && { status: { notIn: ['DELIVERED', 'CANCELLED'] } }),
       ...(dto.active && { status: { notIn: ['READY', 'DELIVERED', 'CANCELLED'] } }),
       ...(dto.overdue && { promisedAt: { lt: new Date() }, status: { notIn: ['READY', 'DELIVERED', 'CANCELLED'] } }),
       ...(s && { OR: [{ number: { contains: s, mode: 'insensitive' } }, { customer: { OR: [{ firstName: { contains: s, mode: 'insensitive' } }, { lastName: { contains: s, mode: 'insensitive' } }, { phone: { contains: s } }] } }, { order: { number: { contains: s, mode: 'insensitive' } } }] }),
@@ -104,7 +105,7 @@ export class WorkshopService {
     if (dto.lensEntryId && !entry) throw new BadRequestException('Unknown lens');
     const treatments = dto.treatmentIds?.length ? await this.prisma.db.lensTreatment.findMany({ where: { id: { in: dto.treatmentIds } }, select: { id: true, name: true } }) : [];
     if (treatments.length !== (dto.treatmentIds?.length ?? 0)) throw new BadRequestException('Unknown treatment');
-    const days = entry?.leadTimeDays ?? (await this.settings.value<number>('workshop_default_days', 5, storeId));
+    const days = entry?.leadTimeDays ?? (await this.settings.value<number>('default_days', 5, storeId));
     const id = await this.prisma.raw.$transaction(async (tx) => {
       const number = await this.numbering.next(tx, storeId, 'JOB_ORDER');
       const job = await tx.jobOrder.create({
@@ -272,7 +273,7 @@ export class WorkshopService {
   async notifyReady(id: string) {
     const j = await this.prisma.raw.jobOrder.findUniqueOrThrow({ where: { id }, include: { customer: true } });
     const store = await this.prisma.raw.store.findUniqueOrThrow({ where: { id: j.storeId } });
-    const enabled = await this.settings.value<string[]>('workshop_notify_channels', ['EMAIL', 'SMS'], j.storeId);
+    const enabled = await this.settings.value<string[]>('notify_channels', ['EMAIL', 'SMS'], j.storeId);
     const data = { jobId: j.id, jobNumber: j.number, firstName: j.customer.firstName, storeName: store.name };
     const targets: { channel: 'EMAIL' | 'SMS' | 'WHATSAPP'; to: string }[] = [];
     if (enabled.includes('EMAIL') && j.customer.email) targets.push({ channel: 'EMAIL', to: j.customer.email });

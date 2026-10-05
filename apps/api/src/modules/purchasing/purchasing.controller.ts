@@ -40,5 +40,6 @@ export class PurchasingController {
   @Post('supplier-invoices/:id/payments') @Permissions('finance:approve') pay(@Param('id') id: string, @Body() dto: D.SupplierPaymentDto, @CurrentUser() u: AuthUser) { return this.payables.pay(id, dto, u); }
   @Post('supplier-invoices/:id/void') @HttpCode(200) @Permissions('finance:update') voidInvoice(@Param('id') id: string, @CurrentUser() u: AuthUser) { return this.payables.void(id, u); }
   @Get('suppliers/:id/statement') @Permissions('suppliers:read', 'finance:read') statement(@Param('id') id: string, @CurrentUser() u: AuthUser) { return this.payables.statement(id, u); }
+  @Get('payment-methods') @Permissions('finance:read') paymentMethods() { return this.payables.paymentMethods(); }
   @Get('purchasing/summary') @Permissions('purchasing:read') summary(@Query() q: D.StoreFilterDto, @CurrentUser() u: AuthUser) { return this.payables.summary(u, q.storeId); }
 }

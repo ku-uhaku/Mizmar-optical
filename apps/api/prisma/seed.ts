@@ -145,7 +145,7 @@ async function seedCommerceConfig() {
   const settings: [string, string, unknown, boolean][] = [
     ['general', 'default_locale', 'fr', true], ['general', 'default_currency', 'MAD', true], ['general', 'timezone', 'Africa/Casablanca', true],
     ['general', 'units', 'metric', true], ['checkout', 'guest_checkout', true, true], ['checkout', 'prescription_required_for_lenses', true, true],
-    ['inventory', 'low_stock_alerts', true, false], ['pos', 'require_open_session', true, false], ['pos', 'min_deposit_pct', 30, false], ['pos', 'allow_negative_stock', false, false], ['invoice', 'footer', 'Merci de votre confiance — Mizmar Optique', false],
+    ['inventory', 'low_stock_alerts', true, false], ['pos', 'require_open_session', true, false], ['pos', 'min_deposit_pct', 30, false], ['pos', 'allow_negative_stock', false, false], ['workshop', 'default_days', 5, false], ['workshop', 'notify_channels', ['EMAIL', 'SMS'], false], ['invoice', 'footer', 'Merci de votre confiance — Mizmar Optique', false],
   ];
   for (const [group, key, value, isPublic] of settings)
     await prisma.setting.upsert({ where: { scope_scopeId_key: { scope: 'GLOBAL', scopeId: 'global', key } }, update: {}, create: { group, key, value: value as any, isPublic } });

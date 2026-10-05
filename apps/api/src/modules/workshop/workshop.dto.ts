@@ -11,6 +11,7 @@ const PRIORITIES = ['NORMAL', 'HIGH', 'URGENT'];
 export class ListJobsDto extends PaginationDto {
   @ApiPropertyOptional({ enum: STATUSES }) @o() @IsIn(STATUSES) status?: string;
   @ApiPropertyOptional({ description: 'Only jobs not yet ready or delivered' }) @o() @bool() @IsBoolean() active?: boolean;
+  @ApiPropertyOptional({ description: 'Everything still in the workshop or waiting for pickup (not delivered/cancelled)' }) @o() @bool() @IsBoolean() open?: boolean;
   @ApiPropertyOptional() @o() @IsString() technicianId?: string;
   @ApiPropertyOptional() @o() @IsString() customerId?: string;
   @ApiPropertyOptional() @o() @IsString() storeId?: string;
