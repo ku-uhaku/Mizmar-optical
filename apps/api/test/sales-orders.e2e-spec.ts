@@ -67,6 +67,15 @@ describe('Prescription orders, returns, quotes, documents, scoping, reports (e2e
       expect(full).toMatchObject({ paymentStatus: 'PAID', balanceDue: 0, paidTotal: total, status: 'CONFIRMED' }); // prescription order waits for hand-over
       expect(full.invoices[0].status).toBe('PAID');
       await f.cashier.post(`/orders/${o.id}/payments`, { methodId: card(), amount: 1 }).expect(409).then((r) => expect(r.body.code).toBe('NOTHING_DUE'));
+      // the workshop must finish the pair first; then hand-over delivers the order and its job together
+      await f.cashier.post(`/orders/${o.id}/deliver`).expect(409).then((r) => expect(r.body.code).toBe('JOBS_NOT_READY'));
+      const job = (await f.admin.get(`/jobs?search=${o.number}`).expect(200)).body.data[0];
+      await f.admin.post(`/jobs/${job.id}/status`, { to: 'LENSES_RECEIVED' }).expect(200);
+      await f.admin.post(`/jobs/${job.id}/assign`, { technicianId: f.technician.user.id }).expect(200);
+      await f.admin.post(`/jobs/${job.id}/status`, { to: 'CUTTING_MOUNTING' }).expect(200);
+      for (const t of (await f.admin.get(`/jobs/${job.id}`)).body.tasks) await f.admin.patch(`/jobs/${job.id}/tasks/${t.id}`, { status: 'DONE' }).expect(200);
+      await f.admin.post(`/jobs/${job.id}/status`, { to: 'QUALITY_CHECK' }).expect(200);
+      await f.technician.post(`/jobs/${job.id}/quality-check`, { passed: true }).expect(200);
       const done = (await f.cashier.post(`/orders/${o.id}/deliver`).expect(200)).body;
       expect(done.status).toBe('COMPLETED');
     });

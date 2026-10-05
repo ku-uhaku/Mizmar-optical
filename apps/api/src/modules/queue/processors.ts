@@ -4,9 +4,14 @@ import type { Job } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { renderTemplate } from '../../common/utils/template';
 
-export interface MailJob { to: string; template: string; locale?: string; data?: Record<string, unknown> }
-export interface SmsJob { to: string; template: string; locale?: string; channel?: 'SMS' | 'WHATSAPP'; data?: Record<string, unknown> }
+export interface MailJob { to: string; template: string; locale?: string; data?: Record<string, unknown>; notificationId?: string }
+export interface SmsJob { to: string; template: string; locale?: string; channel?: 'SMS' | 'WHATSAPP'; data?: Record<string, unknown>; notificationId?: string }
 export interface NotificationJob { userId?: string; customerId?: string; type: string; title?: string; body: string; data?: Record<string, unknown> }
+
+/** Flags a queued Notification row as delivered (delivery is logged until a provider is configured). */
+async function markNotification(prisma: PrismaService, id?: string) {
+  if (id) await prisma.raw.notification.update({ where: { id }, data: { status: 'SENT', sentAt: new Date() } });
+}
 
 /**
  * Phase 1 processors prove the queue wiring. Templates come from the dashboard-editable
@@ -23,6 +28,7 @@ export class MailProcessor extends WorkerHost {
     const subject = renderTemplate(tpl?.subject ?? template, data);
     const body = renderTemplate(tpl?.body ?? JSON.stringify(data ?? {}), data);
     this.logger.log(`[dev] email to=${to} subject="${subject}"\n${body}`);
+    await markNotification(this.prisma, job.data.notificationId);
     return { delivered: false, logged: true };
   }
 }
@@ -36,6 +42,7 @@ export class SmsProcessor extends WorkerHost {
     const { to, template, locale = 'fr', channel = 'SMS', data } = job.data;
     const tpl = await this.prisma.db.smsTemplate.findFirst({ where: { code: template, locale, channel, isActive: true } });
     this.logger.log(`[dev] ${channel} to=${to}: ${renderTemplate(tpl?.body ?? template, data)}`);
+    await markNotification(this.prisma, job.data.notificationId);
     return { delivered: false, logged: true };
   }
 }

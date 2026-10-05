@@ -13,6 +13,7 @@ export class CrudListDto extends PaginationDto {
   @ApiPropertyOptional() @IsOptional() @IsString() lensTypeId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() supplierId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() kind?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() isLensLab?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() category?: string;
 }
 

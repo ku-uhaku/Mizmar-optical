@@ -14,7 +14,7 @@ const n = (v: unknown) => Number(v ?? 0);
 export class DocumentsService {
   constructor(private readonly prisma: PrismaService, private readonly settings: SettingsService) {}
 
-  private fmt(locale: Locale, currency = 'MAD') {
+  fmt(locale: Locale, currency = 'MAD') {
     const money = new Intl.NumberFormat(INTL[locale], { style: 'currency', currency });
     const date = new Intl.DateTimeFormat(INTL[locale], { dateStyle: 'medium' });
     const dateTime = new Intl.DateTimeFormat(INTL[locale], { dateStyle: 'short', timeStyle: 'short' });
@@ -22,14 +22,14 @@ export class DocumentsService {
   }
 
   /** The store's own default template, else a global default, else the built-in. */
-  private async template(type: 'RECEIPT' | 'INVOICE' | 'QUOTE', storeId: string) {
+  async template(type: 'RECEIPT' | 'INVOICE' | 'QUOTE' | 'PURCHASE_ORDER' | 'JOB_ORDER', storeId: string) {
     const rows = await this.prisma.db.documentTemplate.findMany({ where: { type, isDefault: true, OR: [{ storeId }, { storeId: null }] } });
     // a template written for the old placeholder syntax ({{documentNumber}}) is ignored: it would print an empty document
     const usable = rows.filter((r) => /\{\{\s*doc\./.test(r.html));
     return (usable.find((r) => r.storeId === storeId) ?? usable[0])?.html ?? DEFAULT_TEMPLATES[type].html;
   }
 
-  private async base(storeId: string, locale: Locale) {
+  async base(storeId: string, locale: Locale) {
     const [store, branding, footer] = await Promise.all([
       this.prisma.db.store.findFirst({ where: { id: storeId } }),
       this.prisma.db.brandingSetting.findFirst({ where: { key: 'default' } }),
@@ -43,8 +43,52 @@ export class DocumentsService {
     };
   }
 
-  private customerCtx(c?: { firstName: string; lastName: string; phone: string | null; email: string | null } | null) {
+  customerCtx(c?: { firstName: string; lastName: string; phone: string | null; email: string | null } | null) {
     return c ? { name: `${c.firstName} ${c.lastName}`, phone: c.phone ?? '', email: c.email ?? '' } : { name: '', phone: '', email: '' };
+  }
+
+  // ------------------------------------------------------------------ purchase order
+  async purchaseOrder(id: string, user: AuthUser, locale: Locale = 'fr') {
+    const po = await this.prisma.db.purchaseOrder.findFirst({ where: { id }, include: { supplier: true, lines: { where: { deletedAt: null }, orderBy: { id: 'asc' } } } });
+    if (!po) throw new NotFoundException('Purchase order not found');
+    assertStoreAccess(user, po.storeId);
+    const base = await this.base(po.storeId, locale), f = this.fmt(locale, base.currency);
+    const ctx = {
+      ...base, doc: { number: po.number, date: f.date(po.orderedAt ?? po.createdAt), validUntil: f.date(po.expectedAt) }, order: { number: '' }, payments: [],
+      customer: { name: po.supplier.name, phone: po.supplier.phone ?? '', email: po.supplier.email ?? '' },
+      lines: po.lines.map((l) => ({ description: l.description, qty: l.qtyOrdered, unit: f.money(l.unitCost), discount: '', taxRate: `${n(l.taxRatePct)}%`, total: f.money(l.lineTotal) })),
+      totals: { subtotal: f.money(po.subtotal), discount: '', net: f.money(po.subtotal), tax: f.money(po.taxTotal), total: f.money(po.total), paid: '', balanceDue: '' },
+    };
+    return { number: po.number, locale, html: renderHtml(await this.template('PURCHASE_ORDER', po.storeId), ctx) };
+  }
+
+  // ------------------------------------------------------------------ workshop job ticket
+  async jobTicket(id: string, user: AuthUser, locale: Locale = 'fr') {
+    const j = await this.prisma.db.jobOrder.findFirst({
+      where: { id },
+      include: { customer: true, technician: true, order: { select: { number: true } }, prescription: true, tasks: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } }, frameVariant: { select: { sku: true, color: true, size: true, product: { select: { name: true } } } } },
+    });
+    if (!j) throw new NotFoundException('Job not found');
+    assertStoreAccess(user, j.storeId);
+    const base = await this.base(j.storeId, locale), f = this.fmt(locale, base.currency);
+    const [lensType, entry] = await Promise.all([
+      j.lensTypeId ? this.prisma.db.lensType.findFirst({ where: { id: j.lensTypeId } }) : null,
+      j.lensEntryId ? this.prisma.db.lensCatalogEntry.findFirst({ where: { id: j.lensEntryId } }) : null,
+    ]);
+    const rx = j.prescription, num = (v: unknown, signed = false) => (v == null ? '' : `${signed && Number(v) > 0 ? '+' : ''}${Number(v).toFixed(2)}`);
+    const rows = rx ? [
+      { eye: 'OD', sph: num(rx.odSph, true), cyl: num(rx.odCyl, true), axis: rx.odAxis ?? '', add: num(rx.odAdd, true), pd: num(rx.odPd) },
+      { eye: 'OG', sph: num(rx.osSph, true), cyl: num(rx.osCyl, true), axis: rx.osAxis ?? '', add: num(rx.osAdd, true), pd: num(rx.osPd) },
+    ] : [];
+    const fit = (j.fitting ?? {}) as Record<string, unknown>;
+    const ctx = {
+      ...base, doc: { number: j.number, date: f.date(j.createdAt), promised: f.date(j.promisedAt) }, order: { number: j.order?.number ?? '' }, customer: this.customerCtx(j.customer),
+      frame: j.frameVariant ? [j.frameVariant.product.name, j.frameVariant.color, j.frameVariant.size].filter(Boolean).join(' — ') : (j.frameDescription ?? ''),
+      lens: [lensType?.name, entry?.name].filter(Boolean).join(' · '), treatments: ((j.treatments ?? []) as { name: string }[]).map((t) => t.name).join(', '),
+      hasRx: rows.length > 0, rx: rows, pdTotal: num(rx?.pdTotal), fitting: Object.entries(fit).map(([k, v]) => `${k}: ${v}`).join(' · '),
+      priority: j.priority, technician: j.technician ? `${j.technician.firstName} ${j.technician.lastName}` : '', notes: j.notes ?? '', tasks: j.tasks.map((t) => ({ name: t.name })),
+    };
+    return { number: j.number, locale, html: renderHtml(await this.template('JOB_ORDER', j.storeId), ctx) };
   }
 
   // ------------------------------------------------------------------ receipt

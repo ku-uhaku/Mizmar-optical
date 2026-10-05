@@ -29,6 +29,8 @@ import { MediaModule } from './modules/media/media.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { PosModule } from './modules/pos/pos.module';
 import { SalesModule } from './modules/sales/sales.module';
+import { PurchasingModule } from './modules/purchasing/purchasing.module';
+import { WorkshopModule } from './modules/workshop/workshop.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { HealthController } from './modules/health/health.controller';
 
@@ -72,6 +74,8 @@ const AUTH_ROUTES = /\/auth\/(login|forgot-password|reset-password)/;
     PosModule,
     DocumentsModule,
     SalesModule,
+    PurchasingModule,
+    WorkshopModule,
   ],
   controllers: [HealthController],
   providers: [

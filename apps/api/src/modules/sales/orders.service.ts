@@ -8,6 +8,7 @@ import { NumberingService } from '../numbering/numbering.service';
 import { SettingsService } from '../settings/settings.service';
 import { StockService } from '../inventory/stock.service';
 import { SessionsService } from '../pos/sessions.service';
+import { createJobsForOrder, deliverJobsForOrder, notReadyJobs } from '../workshop/workshop.jobs';
 import { CartPricingService, type PricedCart } from './cart-pricing.service';
 import type { AddPaymentDto, CheckoutDto, ListOrdersDto, PaymentInputDto } from './sales.dto';
 
@@ -134,6 +135,7 @@ export class OrdersService {
             subtotal: cart.subtotal, discountTotal: cart.discountTotal, taxTotal: cart.taxTotal, shippingTotal: 0, total: cart.total, balanceDue: cart.total, internalNote: dto.note, placedAt: new Date(), createdById: user.id, clientRef: dto.clientRef,
           },
         });
+        const lensLines: Parameters<typeof createJobsForOrder>[2]['lines'] = [];
         for (const [i, l] of cart.lines.entries()) {
           const line = await tx.orderLine.create({
             data: {
@@ -144,8 +146,9 @@ export class OrdersService {
             },
           });
           await this.stock.move(tx, { storeId, variantId: l.variantId, warehouseId: wh.id, type: 'SALE', quantity: -l.quantity, unitCost: l.unitCost ?? undefined, refType: 'Order', refId: order.id, note: number, actorId: user.id, allowNegative });
-          void line;
+          if (l.lens) lensLines.push({ lineId: line.id, variantId: l.variantId, description: l.description, lens: l.lens });
         }
+        if (lensLines.length) await createJobsForOrder(tx, this.numbering, { orderId: order.id, storeId, customerId: customerId!, userId: user.id, defaultDays: await this.settings.value<number>('workshop_default_days', 5, storeId), lines: lensLines });
         const invoice = await this.createInvoice(tx, { orderId: order.id, storeId, customerId: customerId ?? null, cart, number: await this.numbering.next(tx, storeId, 'INVOICE') });
         await this.applyPayments(tx, { id: order.id, storeId, customerId: customerId ?? null, invoiceId: invoice.id, totalCents, alreadyPaidCents: 0 }, dto.payments, methods, session, user);
         const { balance } = await this.recalc(tx, order.id);
@@ -232,7 +235,12 @@ export class OrdersService {
     assertStoreAccess(user, o.storeId);
     if (!['CONFIRMED', 'PROCESSING', 'READY', 'PENDING'].includes(o.status)) throw new ConflictException({ code: 'INVALID_STATE', message: `Order is ${o.status}` });
     if (toCents(Number(o.balanceDue)) > 0) throw new ConflictException({ code: 'BALANCE_DUE', message: 'The remaining balance must be paid before handing the order over', details: { due: Number(o.balanceDue) } });
-    await this.prisma.raw.order.update({ where: { id }, data: { status: 'COMPLETED', completedAt: new Date() } });
+    await this.prisma.raw.$transaction(async (tx) => {
+      const waiting = await notReadyJobs(tx, id);
+      if (waiting.length) throw new ConflictException({ code: 'JOBS_NOT_READY', message: 'The workshop has not finished every pair yet', details: { jobs: waiting } });
+      await deliverJobsForOrder(tx, id, user.id);
+      await tx.order.update({ where: { id }, data: { status: 'COMPLETED', completedAt: new Date() } });
+    });
     return this.get(id, user);
   }
 

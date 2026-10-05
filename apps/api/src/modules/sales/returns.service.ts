@@ -1,3 +1,4 @@
+import { cancelJobsForOrder } from '../workshop/workshop.jobs';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { fromCents, proportionalRefund, toCents } from '@mizmar/shared';
 import { PrismaService, type Tx } from '../../prisma/prisma.service';
@@ -88,6 +89,7 @@ export class ReturnsService {
       await this.creditNote(tx, order, ret.id, rows, dto.reason);
       if (refundCents > 0) await this.payBack(tx, order, ret.id, method!, dto.refund!, refundCents, session, user);
       await this.orders.recalc(tx, orderId);
+      if (cancel) await cancelJobsForOrder(tx, orderId, user.id, 'Order cancelled');
       if (cancel) await tx.order.update({ where: { id: orderId }, data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: dto.reason } });
       return ret.id;
     });
